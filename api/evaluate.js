@@ -82,7 +82,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { toolName, toolUrl, role, currentStack, technicalComfort, evaluationPurpose, budget } = req.body;
+  const { toolName, toolUrl, role, currentStack, technicalComfort, evaluationPurpose, budget, accessCode } = req.body;
+
+  // Access code verification
+  const VALID_CODE = process.env.ACCESS_CODE || "cashcache2026";
+  if (!accessCode || accessCode !== VALID_CODE) {
+    return res.status(403).json({ error: "Invalid access code. This tool is in private beta for Cash & Cache paid subscribers." });
+  }
 
   if (!toolName) {
     return res.status(400).json({ error: "Tool name is required" });
