@@ -110,7 +110,7 @@ Calibrate your entire evaluation to this user's context. A non-developer PM eval
 
     const response = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 4096,
+      max_tokens: 8096,
       system: EVALUATION_FRAMEWORK,
       tools: [
         {
@@ -127,13 +127,22 @@ Calibrate your entire evaluation to this user's context. A non-developer PM eval
       .map((block) => block.text)
       .join("");
 
-    // Parse JSON from response
+    // Parse JSON from response — handle preamble text, markdown fences, and multiple blocks
     let evaluation;
     try {
-      const cleaned = textContent.replace(/```json|```/g, "").trim();
+      // First try: strip markdown fences and parse
+      let cleaned = textContent.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+
+      // Second try: find the first { and last } to extract JSON object
+      const firstBrace = cleaned.indexOf("{");
+      const lastBrace = cleaned.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+      }
+
       evaluation = JSON.parse(cleaned);
     } catch (parseError) {
-      // If JSON parsing fails, return the raw text
+      // If JSON parsing still fails, return the raw text
       return res.status(200).json({
         raw: true,
         content: textContent,
