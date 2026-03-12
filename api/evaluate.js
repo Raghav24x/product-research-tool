@@ -109,7 +109,7 @@ Calibrate your entire evaluation to this user's context. A non-developer PM eval
     const client = new Anthropic();
 
     const response = await client.messages.create({
-      model: "claude-sonnet-4-6-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 4096,
       system: EVALUATION_FRAMEWORK,
       tools: [
