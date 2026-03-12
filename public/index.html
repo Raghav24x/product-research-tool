@@ -155,6 +155,14 @@
     .footer a { color: var(--cyan-dark); text-decoration: none; }
     .footer a:hover { text-decoration: underline; }
 
+    /* --- Access Gate --- */
+    .gate-container { text-align: center; padding: 60px 24px; }
+    .gate-icon { font-size: 48px; margin-bottom: 16px; }
+    .gate-title { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+    .gate-text { font-size: 15px; color: var(--text-secondary); max-width: 420px; margin: 0 auto 24px; line-height: 1.6; }
+    .gate-link { display: inline-block; font-family: var(--font-body); font-size: 14px; font-weight: 600; color: #fff; background: var(--orange); border-radius: var(--radius-sm); padding: 12px 24px; text-decoration: none; transition: background 0.15s; }
+    .gate-link:hover { background: var(--orange-hover); }
+
     @media (max-width: 600px) {
       .container { padding: 32px 16px 64px; }
       .form-row { grid-template-columns: 1fr; }
@@ -175,6 +183,7 @@
       <div class="topbar-logo-text">Cash <span>&amp;</span> Cache</div>
     </a>
     <div class="topbar-sep"></div>
+    <a href="https://cashandcache.substack.com/" target="_blank" class="topbar-link">Newsletter</a>
     <a href="https://cashandcache.substack.com/subscribe" target="_blank" class="topbar-link">Subscribe</a>
     <div class="topbar-right">
       <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
@@ -191,6 +200,15 @@
       <p>Evaluate any AI tool in minutes. Structured, honest, calibrated to your context. Built by <a href="https://cashandcache.substack.com/" class="header-link" target="_blank">Cash&nbsp;&amp;&nbsp;Cache</a>.</p>
     </div>
 
+    <!-- Access Gate (shown when no valid code) -->
+    <div class="gate-container" id="accessGate" style="display:none;">
+      <div class="gate-icon">🔒</div>
+      <div class="gate-title">Private Beta</div>
+      <div class="gate-text">This tool is in private beta for Cash & Cache paid subscribers. Subscribe to get access — or check your email for the link with the access code.</div>
+      <a href="https://cashandcache.substack.com/subscribe?coupon=f12e9091" target="_blank" class="gate-link">Subscribe to Cash & Cache</a>
+    </div>
+
+    <!-- Form (shown only with valid code) -->
     <div class="form-card" id="formCard">
       <div class="form-section-label">Tool to evaluate</div>
       <div class="form-row">
@@ -223,6 +241,30 @@
   <script>
     var API_URL = '/api/evaluate';
     var loadingSteps = ['Researching pricing, features, and reviews','Checking independent user feedback','Analyzing competitive landscape','Calibrating to your context','Building structured evaluation'];
+
+    /* --- Access Code --- */
+    var ACCESS_CODE = null;
+    (function checkAccess() {
+      var params = new URLSearchParams(window.location.search);
+      var code = params.get('code');
+      if (code) {
+        ACCESS_CODE = code;
+        // Store in session so refreshes don't lose access
+        sessionStorage.setItem('prt_code', code);
+      } else {
+        // Check session storage
+        var stored = sessionStorage.getItem('prt_code');
+        if (stored) { ACCESS_CODE = stored; }
+      }
+      if (!ACCESS_CODE) {
+        // Show gate, hide form and header badge
+        document.getElementById('accessGate').style.display = 'block';
+        document.getElementById('formCard').style.display = 'none';
+      } else {
+        document.getElementById('accessGate').style.display = 'none';
+        document.getElementById('formCard').style.display = 'block';
+      }
+    })();
 
     /* --- Theme Toggle --- */
     function toggleTheme() {
@@ -264,7 +306,7 @@
     async function runEvaluation(){
       var tn=document.getElementById('toolName').value.trim();
       if(!tn){document.getElementById('toolName').focus();return;}
-      var payload={toolName:tn,toolUrl:document.getElementById('toolUrl').value.trim(),role:document.getElementById('role').value,technicalComfort:document.getElementById('technicalComfort').value,evaluationPurpose:document.getElementById('evaluationPurpose').value,budget:document.getElementById('budget').value,currentStack:document.getElementById('currentStack').value.trim()};
+      var payload={toolName:tn,toolUrl:document.getElementById('toolUrl').value.trim(),role:document.getElementById('role').value,technicalComfort:document.getElementById('technicalComfort').value,evaluationPurpose:document.getElementById('evaluationPurpose').value,budget:document.getElementById('budget').value,currentStack:document.getElementById('currentStack').value.trim(),accessCode:ACCESS_CODE};
       showLoading();
       try{var res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok){var err=await res.json();throw new Error(err.error||'Request failed');}var data=await res.json();renderResults(data);}catch(err){showError(err.message||'Evaluation failed. Please try again.');}
     }
