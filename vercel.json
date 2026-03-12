@@ -1,0 +1,21 @@
+{
+  "rewrites": [
+    { "source": "/api/evaluate", "destination": "/api/evaluate" }
+  ]
+}
+```
+
+Commit.
+
+**File 3:** Type `.gitignore` as the filename, paste this:
+```
+node_modules/
+.env
+.vercel
+```
+
+Commit.
+
+**File 4:** Type `.env.example` as the filename, paste this:
+```
+ANTHROPIC_API_KEY=sk-ant-your-key-here
