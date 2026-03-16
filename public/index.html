@@ -83,7 +83,7 @@
     .form-group label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
     .form-group input, .form-group select { font-family: var(--font-body); font-size: 14px; color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; transition: border-color 0.15s, box-shadow 0.15s, background 0.25s; outline: none; width: 100%; }
     .form-group input::placeholder { color: var(--text-muted); }
-    .form-group input:focus, .form-group select:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,217,255,0.1); }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,217,255,0.1); }
     .form-group select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238892A4'%3E%3Cpath d='M6 8.5L1.5 4h9L6 8.5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
     .divider { height: 1px; background: var(--border); margin: 20px 0; }
 
@@ -242,6 +242,13 @@
       <div class="form-row full">
         <div class="form-group"><label for="currentStack">Current tools / stack (optional)</label><input type="text" id="currentStack" placeholder="e.g. VS Code + Copilot, Make.com, Claude" /></div>
       </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label for="additionalContext">Anything else we should know? (optional)</label>
+          <textarea id="additionalContext" rows="2" maxlength="300" placeholder="e.g. I want to use this for automating client research reports, need offline support, team of 3..." oninput="document.getElementById('charCount').textContent=this.value.length+'/300'" style="font-family:var(--font-body);font-size:14px;color:var(--text-primary);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;outline:none;width:100%;resize:vertical;max-height:100px;transition:border-color 0.15s,box-shadow 0.15s;"></textarea>
+          <span id="charCount" style="font-size:11px;color:var(--text-muted);text-align:right;display:block;">0/300</span>
+        </div>
+      </div>
       <div class="divider"></div>
       <button class="btn-evaluate" id="btnEvaluate" onclick="runEvaluation()">Evaluate Tool</button>
     </div>
@@ -363,7 +370,7 @@
       var urlVal=document.getElementById('toolUrl').value.trim();
       if(urlVal && !urlVal.match(/^https?:\/\//i)){urlVal='https://'+urlVal;}
 
-      var payload={toolName:tn,toolUrl:urlVal,role:document.getElementById('role').value,technicalComfort:document.getElementById('technicalComfort').value,evaluationPurpose:document.getElementById('evaluationPurpose').value,budget:document.getElementById('budget').value,currentStack:document.getElementById('currentStack').value.trim(),accessCode:ACCESS_CODE};
+      var payload={toolName:tn,toolUrl:urlVal,role:document.getElementById('role').value,technicalComfort:document.getElementById('technicalComfort').value,evaluationPurpose:document.getElementById('evaluationPurpose').value,budget:document.getElementById('budget').value,currentStack:document.getElementById('currentStack').value.trim(),additionalContext:document.getElementById('additionalContext').value.trim(),accessCode:ACCESS_CODE};
       showLoading();
       try{var res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok){var err=await res.json();throw new Error(err.error||'Request failed');}var data=await res.json();renderResults(data);}catch(err){showError(err.message||'Evaluation failed. Please try again.');}
     }
