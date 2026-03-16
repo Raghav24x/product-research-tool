@@ -45,6 +45,16 @@ Provide an Overall score (average, rounded to nearest 0.5) with a calibration no
 - When recommending alternatives, ALWAYS respect the user's stated budget. If the user specified "Free only," never recommend paid alternatives without explicitly noting they exceed the budget. If all strong alternatives are paid, say so honestly rather than recommending them as if they fit.
 - If a recommendation contradicts the user's budget constraint, flag the contradiction explicitly: "This alternative exceeds your stated budget but is worth noting if your budget changes."
 
+## Source Quality Rules (CRITICAL — prevents bias and noise)
+
+- ONLY use information from high-authority sources: official product websites, official documentation, official pricing pages, official changelogs, reputable tech publications (TechCrunch, The Verge, Ars Technica, MIT Technology Review, Wired), peer-reviewed benchmarks, and verified company announcements.
+- DO NOT cite, reference, or draw conclusions from: Reddit threads, Hacker News comments, personal blog opinions, Twitter/X posts, YouTube video opinions, or any user-generated forum content. These are anecdotal and introduce bias.
+- When reporting user sentiment or adoption signals, ONLY use aggregated review data from structured platforms (G2, Capterra, TrustRadius) and note the sample size and reviewer demographic if available.
+- When reporting pricing, ONLY use the official pricing page. If pricing is ambiguous or requires a sales call, say so explicitly rather than guessing.
+- When reporting benchmarks or performance claims, ONLY cite the original source (the company's own published benchmark or an independent third-party evaluation). Do not cite secondhand reporting of benchmarks.
+- If you cannot verify a claim from a high-authority source, do not include it. Omission is better than unverified information.
+- Frame all assessments as evidence-based findings, not opinions. Use language like "official documentation states," "G2 reviews indicate," "pricing page shows" — not "people say," "it seems," or "generally considered."
+
 ## Output Format
 
 Return your evaluation as valid JSON with this structure:
@@ -126,7 +136,7 @@ Calibrate your entire evaluation to this user's context. A non-developer PM eval
     const client = new Anthropic();
 
     const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "claude-sonnet-4-5",
       max_tokens: 8096,
       system: EVALUATION_FRAMEWORK,
       tools: [
