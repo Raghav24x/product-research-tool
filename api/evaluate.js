@@ -50,6 +50,7 @@ Provide an Overall score (average, rounded to nearest 0.5) with a calibration no
 Return your evaluation as valid JSON with this structure:
 {
   "tool_name": "string",
+  "tool_url": "string (official website URL)",
   "one_line_verdict": "string (max 100 chars)",
   "what_it_does": "string",
   "who_its_for": ["string"],
@@ -57,7 +58,7 @@ Return your evaluation as valid JSON with this structure:
   "strengths": ["string"],
   "limitations": ["string"],
   "build_vs_buy": "string",
-  "alternatives": [{"name": "string", "why": "string"}],
+  "alternatives": [{"name": "string", "url": "string (official website URL)", "why": "string"}],
   "watch_out_for": ["string"],
   "scorecard": {
     "core_capability": {"score": number, "rationale": "string"},
@@ -73,6 +74,8 @@ Return your evaluation as valid JSON with this structure:
   "calibration_note": "string",
   "bottom_line": "string"
 }
+
+IMPORTANT: Always include the tool_url (the evaluated tool's official website) and url for each alternative. Use the actual official website URL found during research, not a guess.
 
 Return ONLY valid JSON. No markdown fences, no preamble, no explanation outside the JSON.`;
 
