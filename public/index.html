@@ -100,6 +100,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-text { font-size: 14px; font-weight: 500; color: var(--text-primary); }
     .loading-step { font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); margin-top: 6px; }
+    .loading-time { font-size: 11px; color: var(--text-muted); margin-top: 12px; font-style: italic; }
 
     /* --- Results --- */
     .results-container { display: none; }
@@ -115,17 +116,29 @@
     .result-section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
     .result-text { font-size: 14px; line-height: 1.7; color: var(--text-secondary); }
 
-    .scorecard-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--bg-input); }
+    /* --- Scorecard --- */
+    .scorecard-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--bg-input); cursor: default; }
     .scorecard-row:last-of-type { border-bottom: none; }
     .scorecard-label { width: 150px; flex-shrink: 0; font-size: 13px; font-weight: 500; color: var(--text-secondary); }
     .scorecard-bar-bg { flex: 1; height: 7px; background: var(--bg-input); border-radius: 4px; overflow: hidden; }
     .scorecard-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
     .scorecard-value { width: 32px; text-align: right; font-size: 13px; font-weight: 600; font-family: var(--font-mono); }
+    .scorecard-rationale { font-size: 12px; color: var(--text-muted); padding: 4px 0 6px 162px; display: none; line-height: 1.5; }
+    .scorecard-row.expanded + .scorecard-rationale { display: block; }
 
     .score-high .scorecard-bar-fill { background: var(--green); } .score-high .scorecard-value { color: var(--green); }
     .score-mid .scorecard-bar-fill { background: var(--cyan-dark); } .score-mid .scorecard-value { color: var(--cyan-dark); }
     .score-low .scorecard-bar-fill { background: var(--amber); } .score-low .scorecard-value { color: var(--amber); }
     .score-poor .scorecard-bar-fill { background: var(--red); } .score-poor .scorecard-value { color: var(--red); }
+
+    .score-legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 10px 0 4px; margin-bottom: 8px; border-bottom: 1px solid var(--bg-input); }
+    .score-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
+    .score-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .score-legend-dot.high { background: var(--green); }
+    .score-legend-dot.mid { background: var(--cyan-dark); }
+    .score-legend-dot.low { background: var(--amber); }
+    .score-legend-dot.poor { background: var(--red); }
+    .scorecard-hint { font-size: 11px; color: var(--text-muted); margin-top: 8px; font-style: italic; }
 
     .calibration-note { font-size: 13px; color: var(--calibration-text); background: var(--calibration-bg); border-left: 3px solid var(--calibration-border); padding: 10px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-top: 14px; }
 
@@ -169,10 +182,12 @@
       .header h1 { font-size: 24px; }
       .form-card { padding: 20px; }
       .scorecard-label { width: 120px; font-size: 12px; }
+      .scorecard-rationale { padding-left: 132px; }
       .result-header { flex-direction: column; gap: 8px; }
       .topbar { padding: 8px 16px; gap: 10px; flex-wrap: wrap; }
       .topbar-logo-text { font-size: 12px; }
       .topbar-right { margin-left: 0; }
+      .score-legend { gap: 10px; }
     }
   </style>
 </head>
@@ -183,8 +198,7 @@
       <div class="topbar-logo-text">Cash <span>&amp;</span> Cache</div>
     </a>
     <div class="topbar-sep"></div>
-    <a href="https://cashandcache.substack.com/" target="_blank" class="topbar-link">Newsletter</a>
-    <a href="https://cashandcache.substack.com/subscribe" target="_blank" class="topbar-link">Subscribe</a>
+    <a href="https://cashandcache.substack.com/subscribe?coupon=f12e9091" target="_blank" class="topbar-link">Subscribe</a>
     <div class="topbar-right">
       <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
         <span class="theme-toggle-icon" id="themeIcon">&#9790;</span>
@@ -200,15 +214,15 @@
       <p>Evaluate any AI tool in minutes. Structured, honest, calibrated to your context. Built by <a href="https://cashandcache.substack.com/" class="header-link" target="_blank">Cash&nbsp;&amp;&nbsp;Cache</a>.</p>
     </div>
 
-    <!-- Access Gate (shown when no valid code) -->
+    <!-- Access Gate -->
     <div class="gate-container" id="accessGate" style="display:none;">
-      <div class="gate-icon">🔒</div>
+      <div class="gate-icon">&#128274;</div>
       <div class="gate-title">Private Beta</div>
-      <div class="gate-text">This tool is in private beta for Cash & Cache paid subscribers. Subscribe to get access — or check your email for the link with the access code.</div>
-      <a href="https://cashandcache.substack.com/subscribe?coupon=f12e9091" target="_blank" class="gate-link">Subscribe to Cash & Cache</a>
+      <div class="gate-text">This tool is in private beta for Cash &amp; Cache paid subscribers. Subscribe to get access or check your email for the link with the access code.</div>
+      <a href="https://cashandcache.substack.com/subscribe?coupon=f12e9091" target="_blank" class="gate-link">Subscribe to Cash &amp; Cache</a>
     </div>
 
-    <!-- Form (shown only with valid code) -->
+    <!-- Form -->
     <div class="form-card" id="formCard">
       <div class="form-section-label">Tool to evaluate</div>
       <div class="form-row">
@@ -219,11 +233,11 @@
       <div class="form-section-label">Your context</div>
       <div class="form-row">
         <div class="form-group"><label for="role">Your role</label><select id="role"><option value="">Select...</option><option value="Product Manager">Product Manager</option><option value="Founder / Solo Operator">Founder / Solo Operator</option><option value="Tech Lead / Engineering Manager">Tech Lead / Eng. Manager</option><option value="Data Analyst">Data Analyst</option><option value="Marketer / Content Creator">Marketer / Content Creator</option><option value="Developer">Developer</option><option value="Consultant / Advisor">Consultant / Advisor</option><option value="Other">Other</option></select></div>
-        <div class="form-group"><label for="technicalComfort">Technical comfort</label><select id="technicalComfort"><option value="">Select...</option><option value="Cannot read code">Cannot read code</option><option value="Can read code but not write">Can read but not write</option><option value="Can write scripts">Can write scripts</option><option value="Full developer">Full developer</option></select></div>
+        <div class="form-group"><label for="technicalComfort">Technical comfort</label><select id="technicalComfort"><option value="">Select...</option><option value="No code — I use no-code tools only">No code — no-code tools only</option><option value="Can read code — I understand it but don't write it">Can read — understand but don't write</option><option value="Can write scripts — Python, SQL, or similar">Can script — Python, SQL, similar</option><option value="Full developer — I ship production code">Full developer — ship production code</option></select></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label for="evaluationPurpose">Evaluating for</label><select id="evaluationPurpose"><option value="">Select...</option><option value="Personal productivity">Personal productivity</option><option value="Team adoption">Team adoption</option><option value="Content / research">Content / research</option><option value="Building a product">Building a product</option><option value="Client recommendation">Client recommendation</option></select></div>
-        <div class="form-group"><label for="budget">Budget range</label><select id="budget"><option value="">Select...</option><option value="Free only">Free only</option><option value="Under $20/month">Under $20/month</option><option value="Under $50/month">Under $50/month</option><option value="Enterprise budget">Enterprise budget</option></select></div>
+        <div class="form-group"><label for="budget">Monthly budget for this tool category</label><select id="budget"><option value="">Select...</option><option value="Free only">Free only</option><option value="Under $20/month">Under $20/month</option><option value="Under $50/month">Under $50/month</option><option value="Enterprise budget">Enterprise budget</option></select></div>
       </div>
       <div class="form-row full">
         <div class="form-group"><label for="currentStack">Current tools / stack (optional)</label><input type="text" id="currentStack" placeholder="e.g. VS Code + Copilot, Make.com, Claude" /></div>
@@ -232,10 +246,17 @@
       <button class="btn-evaluate" id="btnEvaluate" onclick="runEvaluation()">Evaluate Tool</button>
     </div>
 
-    <div class="loading-container" id="loading"><div class="loading-spinner"></div><div class="loading-text">Evaluating tool...</div><div class="loading-step" id="loadingStep">Researching pricing, features, and reviews</div></div>
+    <!-- Loading -->
+    <div class="loading-container" id="loading">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Evaluating tool...</div>
+      <div class="loading-step" id="loadingStep">Researching pricing, features, and reviews</div>
+      <div class="loading-time">This typically takes 2-3 minutes. Claude is researching live data.</div>
+    </div>
+
     <div class="error-container" id="errorContainer"><div class="error-text" id="errorText">Something went wrong.</div><button class="btn-retry" onclick="resetForm()">Try again</button></div>
     <div class="results-container" id="results"></div>
-    <div class="footer">Built by <a href="https://cashandcache.substack.com/" target="_blank">Cash &amp; Cache</a> &middot; Powered by Claude &middot; <a href="https://cashandcache.substack.com/subscribe" target="_blank">Subscribe</a></div>
+    <div class="footer">Built by <a href="https://cashandcache.substack.com/" target="_blank">Cash &amp; Cache</a> &middot; Powered by Claude &middot; <a href="https://cashandcache.substack.com/subscribe?coupon=f12e9091" target="_blank">Subscribe</a></div>
   </div>
 
   <script>
@@ -249,15 +270,12 @@
       var code = params.get('code');
       if (code) {
         ACCESS_CODE = code;
-        // Store in session so refreshes don't lose access
         sessionStorage.setItem('prt_code', code);
       } else {
-        // Check session storage
         var stored = sessionStorage.getItem('prt_code');
         if (stored) { ACCESS_CODE = stored; }
       }
       if (!ACCESS_CODE) {
-        // Show gate, hide form and header badge
         document.getElementById('accessGate').style.display = 'block';
         document.getElementById('formCard').style.display = 'none';
       } else {
@@ -286,6 +304,7 @@
 
     /* --- Core Logic --- */
     function getScoreClass(s){if(s>=4)return'score-high';if(s>=3)return'score-mid';if(s>=2)return'score-low';return'score-poor';}
+    function getScoreLabel(s){if(s>=4)return'Strong';if(s>=3)return'Adequate';if(s>=2)return'Below avg';return'Poor';}
     function formatLabel(k){var m={core_capability:'Core Capability',production_readiness:'Production Readiness',pricing_value:'Pricing & Value',api_integration:'API & Integration',reliability_scale:'Reliability & Scale',data_privacy:'Data Privacy',differentiation:'Differentiation',documentation_support:'Docs & Support'};return m[k]||k;}
     function showLoading(){document.getElementById('formCard').style.display='none';document.getElementById('loading').classList.add('active');document.getElementById('results').classList.remove('active');document.getElementById('errorContainer').classList.remove('active');var step=0;window._li=setInterval(function(){step=(step+1)%loadingSteps.length;document.getElementById('loadingStep').textContent=loadingSteps[step];},4000);}
     function hideLoading(){document.getElementById('loading').classList.remove('active');clearInterval(window._li);}
@@ -295,10 +314,43 @@
     function renderResults(data){
       hideLoading();
       if(data.raw){document.getElementById('results').innerHTML='<div class="result-section"><div class="result-section-title">Evaluation</div><div class="result-text">'+data.content.replace(/\n/g,'<br>')+'</div></div><button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button>';document.getElementById('results').classList.add('active');return;}
-      var e=data.evaluation,sc='';
-      if(e.scorecard){for(var k in e.scorecard){var v=e.scorecard[k],pct=(v.score/5)*100,cls=getScoreClass(v.score);sc+='<div class="scorecard-row '+cls+'" title="'+v.rationale+'"><div class="scorecard-label">'+formatLabel(k)+'</div><div class="scorecard-bar-bg"><div class="scorecard-bar-fill" style="width:'+pct+'%"></div></div><div class="scorecard-value">'+v.score+'</div></div>';}}
+      var e=data.evaluation;
+
+      /* --- Scorecard with expandable rationale --- */
+      var sc='<div class="score-legend"><div class="score-legend-item"><div class="score-legend-dot high"></div>4-5 Strong</div><div class="score-legend-item"><div class="score-legend-dot mid"></div>3 Adequate</div><div class="score-legend-item"><div class="score-legend-dot low"></div>2 Below avg</div><div class="score-legend-item"><div class="score-legend-dot poor"></div>1 Poor</div></div>';
+      if(e.scorecard){var idx=0;for(var k in e.scorecard){var v=e.scorecard[k],pct=(v.score/5)*100,cls=getScoreClass(v.score);sc+='<div class="scorecard-row '+cls+'" onclick="this.classList.toggle(\'expanded\')" title="Click for detail"><div class="scorecard-label">'+formatLabel(k)+'</div><div class="scorecard-bar-bg"><div class="scorecard-bar-fill" style="width:'+pct+'%"></div></div><div class="scorecard-value">'+v.score+'</div></div><div class="scorecard-rationale">'+v.rationale+'</div>';idx++;}}
+      sc+='<div class="scorecard-hint">Click any row to see the rationale</div>';
+
+      /* --- Alternatives --- */
       var alt='';if(e.alternatives){alt=e.alternatives.map(function(a){return'<div class="alternative-item"><span class="alternative-name">'+a.name+':</span><span class="alternative-why">'+a.why+'</span></div>';}).join('');}
-      document.getElementById('results').innerHTML='<div class="result-header-card"><div class="result-header"><div class="result-tool-name">'+(e.tool_name||'Evaluation')+'</div><div class="result-overall-score">'+(e.overall_score||'--')+'<span>/ 5</span></div></div>'+(e.one_line_verdict?'<div class="result-verdict">"'+e.one_line_verdict+'"</div>':'')+'</div><div class="result-section"><div class="result-section-title">What it does</div><div class="result-text">'+(e.what_it_does||'')+'</div></div><div class="result-section"><div class="result-section-title">Scorecard</div>'+sc+(e.calibration_note?'<div class="calibration-note">'+e.calibration_note+'</div>':'')+'</div><div class="result-section"><div class="result-section-title">Who it is for</div><ul class="result-list default">'+(e.who_its_for||[]).map(function(w){return'<li>'+w+'</li>';}).join('')+'</ul></div><div class="result-section"><div class="result-section-title">Strengths</div><ul class="result-list strengths">'+(e.strengths||[]).map(function(s){return'<li>'+s+'</li>';}).join('')+'</ul></div><div class="result-section"><div class="result-section-title">Limitations</div><ul class="result-list limitations">'+(e.limitations||[]).map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul></div><div class="result-section"><div class="result-section-title">Watch out for</div><ul class="result-list warnings">'+(e.watch_out_for||[]).map(function(w){return'<li>'+w+'</li>';}).join('')+'</ul></div><div class="result-section"><div class="result-section-title">Build vs Buy</div><div class="result-text">'+(e.build_vs_buy||'')+'</div></div><div class="result-section"><div class="result-section-title">Alternatives worth comparing</div>'+alt+'</div><div class="result-section"><div class="result-section-title">Practical cost</div><div class="result-text">'+(e.practical_cost||'')+'</div></div><div class="result-section"><div class="result-section-title">Bottom line</div><div class="bottom-line">'+(e.bottom_line||'')+'</div></div><button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button>';
+
+      /* --- FIX 1B: Bottom line moved to top, right after header card --- */
+      document.getElementById('results').innerHTML=
+        '<div class="result-header-card"><div class="result-header"><div class="result-tool-name">'+(e.tool_name||'Evaluation')+'</div><div class="result-overall-score">'+(e.overall_score||'--')+'<span>/ 5</span></div></div>'+(e.one_line_verdict?'<div class="result-verdict">"'+e.one_line_verdict+'"</div>':'')+'</div>'+
+
+        /* Bottom line first */
+        (e.bottom_line?'<div class="result-section"><div class="result-section-title">Bottom line</div><div class="bottom-line">'+e.bottom_line+'</div></div>':'')+
+
+        '<div class="result-section"><div class="result-section-title">What it does</div><div class="result-text">'+(e.what_it_does||'')+'</div></div>'+
+
+        '<div class="result-section"><div class="result-section-title">Scorecard</div>'+sc+(e.calibration_note?'<div class="calibration-note">'+e.calibration_note+'</div>':'')+'</div>'+
+
+        '<div class="result-section"><div class="result-section-title">Who it is for</div><ul class="result-list default">'+(e.who_its_for||[]).map(function(w){return'<li>'+w+'</li>';}).join('')+'</ul></div>'+
+
+        '<div class="result-section"><div class="result-section-title">Strengths</div><ul class="result-list strengths">'+(e.strengths||[]).map(function(s){return'<li>'+s+'</li>';}).join('')+'</ul></div>'+
+
+        '<div class="result-section"><div class="result-section-title">Limitations</div><ul class="result-list limitations">'+(e.limitations||[]).map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul></div>'+
+
+        '<div class="result-section"><div class="result-section-title">Watch out for</div><ul class="result-list warnings">'+(e.watch_out_for||[]).map(function(w){return'<li>'+w+'</li>';}).join('')+'</ul></div>'+
+
+        '<div class="result-section"><div class="result-section-title">Build vs Buy</div><div class="result-text">'+(e.build_vs_buy||'')+'</div></div>'+
+
+        '<div class="result-section"><div class="result-section-title">Alternatives worth comparing</div>'+alt+'</div>'+
+
+        '<div class="result-section"><div class="result-section-title">Practical cost</div><div class="result-text">'+(e.practical_cost||'')+'</div></div>'+
+
+        '<button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button>';
+
       document.getElementById('results').classList.add('active');
       document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
     }
@@ -306,7 +358,12 @@
     async function runEvaluation(){
       var tn=document.getElementById('toolName').value.trim();
       if(!tn){document.getElementById('toolName').focus();return;}
-      var payload={toolName:tn,toolUrl:document.getElementById('toolUrl').value.trim(),role:document.getElementById('role').value,technicalComfort:document.getElementById('technicalComfort').value,evaluationPurpose:document.getElementById('evaluationPurpose').value,budget:document.getElementById('budget').value,currentStack:document.getElementById('currentStack').value.trim(),accessCode:ACCESS_CODE};
+
+      /* FIX 1C: Auto-prepend https:// if URL entered without protocol */
+      var urlVal=document.getElementById('toolUrl').value.trim();
+      if(urlVal && !urlVal.match(/^https?:\/\//i)){urlVal='https://'+urlVal;}
+
+      var payload={toolName:tn,toolUrl:urlVal,role:document.getElementById('role').value,technicalComfort:document.getElementById('technicalComfort').value,evaluationPurpose:document.getElementById('evaluationPurpose').value,budget:document.getElementById('budget').value,currentStack:document.getElementById('currentStack').value.trim(),accessCode:ACCESS_CODE};
       showLoading();
       try{var res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok){var err=await res.json();throw new Error(err.error||'Request failed');}var data=await res.json();renderResults(data);}catch(err){showError(err.message||'Evaluation failed. Please try again.');}
     }
