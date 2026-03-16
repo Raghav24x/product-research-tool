@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Product Research Tool — Cash & Cache</title>
   <meta name="description" content="Evaluate any AI tool in minutes. Structured, honest, calibrated to your context." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -15,12 +13,11 @@
       --orange: #FF8C42; --orange-hover: #E87A30; --orange-light: #FFF3EB;
       --cyan: #00D9FF; --cyan-dark: #00B8D9; --cyan-light: #E6FAFF;
       --green: #22A66E; --amber: #E8960C; --red: #D94052;
-      --font-body: 'DM Sans', system-ui, sans-serif;
-      --font-mono: 'DM Mono', 'Fira Code', monospace;
+      --font-body: Arial, Helvetica, sans-serif;
+      --font-mono: 'Courier New', Courier, monospace;
       --radius: 10px; --radius-sm: 6px;
     }
 
-    /* ===== LIGHT THEME ===== */
     [data-theme="light"] {
       --bg: #FFFFFF; --bg-page: #FAFBFC; --bg-input: #F4F5F7; --bg-card: #FFFFFF;
       --border: #E2E4E9; --text-primary: #0A1628; --text-secondary: #4A5568; --text-muted: #8892A4;
@@ -31,7 +28,6 @@
       --error-bg: #FEF0F1; --error-border: rgba(217,64,82,0.15);
     }
 
-    /* ===== DARK THEME ===== */
     [data-theme="dark"] {
       --bg: #1A1B23; --bg-page: #0F1117; --bg-input: #282935; --bg-card: #21222D;
       --border: #2E3040; --text-primary: #E8E9ED; --text-secondary: #9A9BB0; --text-muted: #6B6C7E;
@@ -44,102 +40,90 @@
 
     body { font-family: var(--font-body); background: var(--bg-page); color: var(--text-primary); line-height: 1.6; min-height: 100vh; transition: background 0.25s, color 0.25s; }
 
-    /* --- Top Bar --- */
     .topbar { background: var(--navy); padding: 10px 24px; display: flex; align-items: center; justify-content: center; gap: 16px; }
     .topbar-logo-link { display: flex; align-items: center; gap: 10px; text-decoration: none; }
     .topbar-logo-img { height: 28px; width: auto; object-fit: contain; }
-    .topbar-logo-text { font-size: 14px; font-weight: 600; color: #fff; letter-spacing: 0.03em; }
+    .topbar-logo-text { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 0.03em; }
     .topbar-logo-text span { color: var(--cyan); }
     .topbar-sep { width: 1px; height: 14px; background: rgba(255,255,255,0.2); }
     .topbar-link { font-size: 12px; color: rgba(255,255,255,0.6); text-decoration: none; transition: color 0.15s; }
     .topbar-link:hover { color: #fff; }
     .topbar-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
-
-    /* --- Theme Toggle --- */
     .theme-toggle { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,0.7); font-family: var(--font-body); transition: background 0.15s; }
     .theme-toggle:hover { background: rgba(255,255,255,0.15); color: #fff; }
     .theme-toggle-icon { font-size: 14px; line-height: 1; }
 
-    /* --- Layout --- */
     .container { max-width: 700px; margin: 0 auto; padding: 48px 24px 80px; }
 
-    /* --- Header --- */
     .header { text-align: center; margin-bottom: 40px; }
-    .header-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--orange); background: var(--orange-light); border: 1px solid rgba(255,140,66,0.2); padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; }
+    .header-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--orange); background: var(--orange-light); border: 1px solid rgba(255,140,66,0.2); padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; }
     [data-theme="dark"] .header-badge { background: rgba(255,140,66,0.1); }
     .header-badge::before { content: ''; width: 6px; height: 6px; background: var(--orange); border-radius: 50%; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-    .header h1 { font-size: 30px; font-weight: 700; line-height: 1.25; color: var(--text-primary); margin-bottom: 10px; letter-spacing: -0.02em; }
+    .header h1 { font-size: 28px; font-weight: 700; line-height: 1.25; color: var(--text-primary); margin-bottom: 10px; letter-spacing: -0.01em; }
     .header p { font-size: 15px; color: var(--text-secondary); max-width: 480px; margin: 0 auto; }
-    .header-link { color: var(--cyan-dark); text-decoration: none; font-weight: 500; }
+    .header-link { color: var(--cyan-dark); text-decoration: none; font-weight: 700; }
     .header-link:hover { text-decoration: underline; }
 
-    /* --- Form Card --- */
     .form-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow-sm); margin-bottom: 28px; transition: background 0.25s, border-color 0.25s; }
-    .form-section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+    .form-section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
     .form-row.full { grid-template-columns: 1fr; }
     .form-group { display: flex; flex-direction: column; gap: 5px; }
-    .form-group label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
-    .form-group input, .form-group select { font-family: var(--font-body); font-size: 14px; color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; transition: border-color 0.15s, box-shadow 0.15s, background 0.25s; outline: none; width: 100%; }
-    .form-group input::placeholder { color: var(--text-muted); }
+    .form-group label { font-size: 13px; font-weight: 700; color: var(--text-muted); }
+    .form-group input, .form-group select, .form-group textarea { font-family: var(--font-body); font-size: 14px; color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; transition: border-color 0.15s, box-shadow 0.15s, background 0.25s; outline: none; width: 100%; }
+    .form-group input::placeholder, .form-group textarea::placeholder { color: var(--text-muted); }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,217,255,0.1); }
     .form-group select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238892A4'%3E%3Cpath d='M6 8.5L1.5 4h9L6 8.5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+    .form-group textarea { resize: vertical; max-height: 100px; }
+    .char-count { font-size: 11px; color: var(--text-muted); text-align: right; display: block; }
     .divider { height: 1px; background: var(--border); margin: 20px 0; }
 
-    /* --- Button --- */
-    .btn-evaluate { width: 100%; font-family: var(--font-body); font-size: 15px; font-weight: 600; color: #fff; background: var(--orange); border: none; border-radius: var(--radius-sm); padding: 13px 24px; cursor: pointer; transition: background 0.15s, transform 0.1s; box-shadow: 0 2px 6px rgba(255,140,66,0.25); }
+    .btn-evaluate { width: 100%; font-family: var(--font-body); font-size: 15px; font-weight: 700; color: #fff; background: var(--orange); border: none; border-radius: var(--radius-sm); padding: 13px 24px; cursor: pointer; transition: background 0.15s, transform 0.1s; box-shadow: 0 2px 6px rgba(255,140,66,0.25); }
     .btn-evaluate:hover { background: var(--orange-hover); }
     .btn-evaluate:active { transform: scale(0.99); }
     .btn-evaluate:disabled { background: var(--bg-input); color: var(--text-muted); cursor: not-allowed; box-shadow: none; }
 
-    /* --- Loading --- */
     .loading-container { display: none; text-align: center; padding: 48px 24px; }
     .loading-container.active { display: block; }
     .loading-spinner { width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+    .loading-text { font-size: 14px; font-weight: 700; color: var(--text-primary); }
     .loading-step { font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); margin-top: 6px; }
     .loading-time { font-size: 11px; color: var(--text-muted); margin-top: 12px; font-style: italic; }
 
-    /* --- Results --- */
     .results-container { display: none; }
     .results-container.active { display: block; }
     .result-header-card { background: var(--result-header-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 28px; margin-bottom: 16px; box-shadow: var(--shadow-md); transition: background 0.25s; }
     .result-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .result-tool-name { font-size: 22px; font-weight: 700; color: var(--result-header-text); }
+    .result-tool-name a { color: var(--result-header-text); text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.3); }
+    .result-tool-name a:hover { border-bottom-color: #fff; }
     .result-overall-score { display: flex; align-items: baseline; gap: 4px; font-size: 28px; font-weight: 700; color: var(--score-text-on-header); }
     .result-overall-score span { font-size: 14px; color: var(--score-sub-on-header); font-weight: 400; }
     .result-verdict { font-size: 14px; color: var(--result-header-sub); margin-top: 8px; font-style: italic; }
 
     .result-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; margin-bottom: 12px; box-shadow: var(--shadow-sm); transition: background 0.25s, border-color 0.25s; }
-    .result-section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+    .result-section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
     .result-text { font-size: 14px; line-height: 1.7; color: var(--text-secondary); }
 
-    /* --- Scorecard --- */
     .scorecard-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--bg-input); cursor: default; }
     .scorecard-row:last-of-type { border-bottom: none; }
-    .scorecard-label { width: 150px; flex-shrink: 0; font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .scorecard-label { width: 150px; flex-shrink: 0; font-size: 13px; font-weight: 700; color: var(--text-secondary); }
     .scorecard-bar-bg { flex: 1; height: 7px; background: var(--bg-input); border-radius: 4px; overflow: hidden; }
     .scorecard-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
-    .scorecard-value { width: 32px; text-align: right; font-size: 13px; font-weight: 600; font-family: var(--font-mono); }
+    .scorecard-value { width: 32px; text-align: right; font-size: 13px; font-weight: 700; font-family: var(--font-mono); }
     .scorecard-rationale { font-size: 12px; color: var(--text-muted); padding: 4px 0 6px 162px; display: none; line-height: 1.5; }
     .scorecard-row.expanded + .scorecard-rationale { display: block; }
-
     .score-high .scorecard-bar-fill { background: var(--green); } .score-high .scorecard-value { color: var(--green); }
     .score-mid .scorecard-bar-fill { background: var(--cyan-dark); } .score-mid .scorecard-value { color: var(--cyan-dark); }
     .score-low .scorecard-bar-fill { background: var(--amber); } .score-low .scorecard-value { color: var(--amber); }
     .score-poor .scorecard-bar-fill { background: var(--red); } .score-poor .scorecard-value { color: var(--red); }
-
     .score-legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 10px 0 4px; margin-bottom: 8px; border-bottom: 1px solid var(--bg-input); }
     .score-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
     .score-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-    .score-legend-dot.high { background: var(--green); }
-    .score-legend-dot.mid { background: var(--cyan-dark); }
-    .score-legend-dot.low { background: var(--amber); }
-    .score-legend-dot.poor { background: var(--red); }
+    .score-legend-dot.high { background: var(--green); } .score-legend-dot.mid { background: var(--cyan-dark); } .score-legend-dot.low { background: var(--amber); } .score-legend-dot.poor { background: var(--red); }
     .scorecard-hint { font-size: 11px; color: var(--text-muted); margin-top: 8px; font-style: italic; }
-
     .calibration-note { font-size: 13px; color: var(--calibration-text); background: var(--calibration-bg); border-left: 3px solid var(--calibration-border); padding: 10px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-top: 14px; }
 
     .result-list { list-style: none; padding: 0; }
@@ -150,37 +134,52 @@
     .result-list.limitations li::before { background: var(--amber); }
     .result-list.warnings li::before { background: var(--red); }
 
-    .alternative-item { display: flex; gap: 6px; padding: 6px 0; font-size: 14px; }
-    .alternative-name { font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+    .alternative-item { display: flex; gap: 6px; padding: 8px 0; font-size: 14px; align-items: baseline; }
+    .alternative-name { font-weight: 700; color: var(--cyan-dark); white-space: nowrap; text-decoration: none; }
+    .alternative-name:hover { text-decoration: underline; }
     .alternative-why { color: var(--text-secondary); }
     .bottom-line { font-size: 15px; font-weight: 500; color: var(--text-primary); line-height: 1.7; }
 
-    .error-container { display: none; text-align: center; padding: 28px; background: var(--error-bg); border: 1px solid var(--error-border); border-radius: var(--radius); }
-    .error-container.active { display: block; }
-    .error-text { font-size: 14px; color: var(--red); }
-    .btn-retry { font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 16px; cursor: pointer; margin-top: 10px; }
-
-    .btn-new-eval { font-family: var(--font-body); font-size: 14px; font-weight: 500; color: var(--orange); background: transparent; border: 1px solid var(--orange); border-radius: var(--radius-sm); padding: 10px 20px; cursor: pointer; margin-top: 20px; display: inline-block; transition: background 0.15s; }
+    .results-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+    .btn-new-eval { font-family: var(--font-body); font-size: 14px; font-weight: 700; color: var(--orange); background: transparent; border: 1px solid var(--orange); border-radius: var(--radius-sm); padding: 10px 20px; cursor: pointer; display: inline-block; transition: background 0.15s; }
     .btn-new-eval:hover { background: var(--orange-light); }
     [data-theme="dark"] .btn-new-eval:hover { background: rgba(255,140,66,0.1); }
-
-    /* --- Results Action Bar --- */
-    .results-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
     .btn-pdf { font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; display: inline-flex; align-items: center; gap: 6px; }
     .btn-pdf:hover { border-color: var(--cyan); background: var(--cyan-light); }
     [data-theme="dark"] .btn-pdf:hover { background: rgba(0,217,255,0.08); }
 
-    /* --- TOC --- */
     .result-toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 12px; box-shadow: var(--shadow-sm); }
-    .result-toc-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+    .result-toc-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
     .result-toc-list { display: flex; flex-wrap: wrap; gap: 6px 16px; list-style: none; padding: 0; }
-    .result-toc-list a { font-size: 13px; color: var(--cyan-dark); text-decoration: none; font-weight: 500; }
+    .result-toc-list a { font-size: 13px; color: var(--cyan-dark); text-decoration: none; font-weight: 700; }
     .result-toc-list a:hover { text-decoration: underline; }
 
-    /* --- Privacy Section --- */
+    /* --- Tool Discovery --- */
+    .discover-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
+    .discover-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+    .discover-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+    .discover-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .discover-chip { font-family: var(--font-body); font-size: 13px; color: var(--text-secondary); background: var(--bg-input); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s; }
+    .discover-chip:hover { border-color: var(--cyan); color: var(--cyan-dark); background: var(--cyan-light); }
+    [data-theme="dark"] .discover-chip:hover { background: rgba(0,217,255,0.08); }
+
+    /* --- Email capture for PDF --- */
+    .email-capture { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-top: 12px; margin-bottom: 12px; box-shadow: var(--shadow-sm); display: none; }
+    .email-capture.active { display: block; }
+    .email-capture-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+    .email-capture-text { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+    .email-capture-row { display: flex; gap: 8px; }
+    .email-capture-row input { flex: 1; font-family: var(--font-body); font-size: 14px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-input); color: var(--text-primary); outline: none; }
+    .email-capture-row input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,217,255,0.1); }
+    .btn-email-pdf { font-family: var(--font-body); font-size: 13px; font-weight: 700; color: #fff; background: var(--orange); border: none; border-radius: var(--radius-sm); padding: 10px 18px; cursor: pointer; white-space: nowrap; }
+    .btn-email-pdf:hover { background: var(--orange-hover); }
+    .email-skip { font-size: 12px; color: var(--text-muted); margin-top: 8px; cursor: pointer; text-decoration: underline; }
+    .email-skip:hover { color: var(--text-secondary); }
+
+    /* --- Privacy --- */
     .privacy-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-top: 24px; box-shadow: var(--shadow-sm); }
     .privacy-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-    .privacy-toggle-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+    .privacy-toggle-title { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
     .privacy-toggle-icon { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
     .privacy-section.open .privacy-toggle-icon { transform: rotate(180deg); }
     .privacy-content { display: none; margin-top: 14px; font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
@@ -189,9 +188,26 @@
     .privacy-content a { color: var(--cyan-dark); text-decoration: none; }
     .privacy-content a:hover { text-decoration: underline; }
 
-    /* --- Print / PDF styles --- */
+    .error-container { display: none; text-align: center; padding: 28px; background: var(--error-bg); border: 1px solid var(--error-border); border-radius: var(--radius); }
+    .error-container.active { display: block; }
+    .error-text { font-size: 14px; color: var(--red); }
+    .btn-retry { font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 16px; cursor: pointer; margin-top: 10px; }
+
+    .gate-container { text-align: center; padding: 60px 24px; }
+    .gate-icon { font-size: 48px; margin-bottom: 16px; }
+    .gate-title { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+    .gate-text { font-size: 15px; color: var(--text-secondary); max-width: 420px; margin: 0 auto 24px; line-height: 1.6; }
+    .gate-link { display: inline-block; font-family: var(--font-body); font-size: 14px; font-weight: 700; color: #fff; background: var(--orange); border-radius: var(--radius-sm); padding: 12px 24px; text-decoration: none; transition: background 0.15s; }
+    .gate-link:hover { background: var(--orange-hover); }
+
+    .footer { text-align: center; padding-top: 40px; font-size: 12px; color: var(--text-muted); }
+    .footer a { color: var(--cyan-dark); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    .print-footer { display: none; }
+
     @media print {
-      .topbar, .loading-container, .error-container, .btn-new-eval, .btn-pdf, .results-actions, .result-toc, .privacy-section, .footer, .gate-container, .form-card, .header-badge, .scorecard-hint, .score-legend { display: none !important; }
+      .topbar, .loading-container, .error-container, .btn-new-eval, .btn-pdf, .results-actions, .result-toc, .privacy-section, .footer, .gate-container, .form-card, .header-badge, .scorecard-hint, .score-legend, .discover-section, .email-capture { display: none !important; }
       body { background: #fff !important; color: #0A1628 !important; }
       .container { padding: 0 !important; max-width: 100% !important; }
       .header { margin-bottom: 20px !important; }
@@ -199,7 +215,7 @@
       .header p { display: none; }
       .results-container { display: block !important; }
       .result-header-card { background: #0A1628 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 16px 20px !important; margin-bottom: 12px !important; }
-      .result-tool-name { color: #fff !important; font-size: 18px !important; }
+      .result-tool-name, .result-tool-name a { color: #fff !important; font-size: 18px !important; text-decoration: none !important; border: none !important; }
       .result-overall-score { color: #00D9FF !important; font-size: 22px !important; }
       .result-overall-score span { color: rgba(255,255,255,0.4) !important; }
       .result-verdict { color: rgba(255,255,255,0.65) !important; }
@@ -207,26 +223,14 @@
       .scorecard-row { padding: 6px 0 !important; }
       .scorecard-bar-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .scorecard-rationale { display: block !important; }
+      .alternative-name { color: #0A1628 !important; }
       .print-footer { display: block !important; text-align: center; font-size: 11px; color: #8892A4; padding-top: 20px; border-top: 1px solid #E2E4E9; margin-top: 20px; }
     }
-    .print-footer { display: none; }
-
-    .footer { text-align: center; padding-top: 40px; font-size: 12px; color: var(--text-muted); }
-    .footer a { color: var(--cyan-dark); text-decoration: none; }
-    .footer a:hover { text-decoration: underline; }
-
-    /* --- Access Gate --- */
-    .gate-container { text-align: center; padding: 60px 24px; }
-    .gate-icon { font-size: 48px; margin-bottom: 16px; }
-    .gate-title { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
-    .gate-text { font-size: 15px; color: var(--text-secondary); max-width: 420px; margin: 0 auto 24px; line-height: 1.6; }
-    .gate-link { display: inline-block; font-family: var(--font-body); font-size: 14px; font-weight: 600; color: #fff; background: var(--orange); border-radius: var(--radius-sm); padding: 12px 24px; text-decoration: none; transition: background 0.15s; }
-    .gate-link:hover { background: var(--orange-hover); }
 
     @media (max-width: 600px) {
       .container { padding: 32px 16px 64px; }
       .form-row { grid-template-columns: 1fr; }
-      .header h1 { font-size: 24px; }
+      .header h1 { font-size: 22px; }
       .form-card { padding: 20px; }
       .scorecard-label { width: 120px; font-size: 12px; }
       .scorecard-rationale { padding-left: 132px; }
@@ -235,6 +239,7 @@
       .topbar-logo-text { font-size: 12px; }
       .topbar-right { margin-left: 0; }
       .score-legend { gap: 10px; }
+      .email-capture-row { flex-direction: column; }
     }
   </style>
 </head>
@@ -292,12 +297,28 @@
       <div class="form-row full">
         <div class="form-group">
           <label for="additionalContext">Anything else we should know? (optional)</label>
-          <textarea id="additionalContext" rows="2" maxlength="300" placeholder="e.g. I want to use this for automating client research reports, need offline support, team of 3..." oninput="document.getElementById('charCount').textContent=this.value.length+'/300'" style="font-family:var(--font-body);font-size:14px;color:var(--text-primary);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;outline:none;width:100%;resize:vertical;max-height:100px;transition:border-color 0.15s,box-shadow 0.15s;"></textarea>
-          <span id="charCount" style="font-size:11px;color:var(--text-muted);text-align:right;display:block;">0/300</span>
+          <textarea id="additionalContext" rows="2" maxlength="300" placeholder="e.g. I want to use this for automating client research reports, need offline support, team of 3..." oninput="document.getElementById('charCount').textContent=this.value.length+'/300'"></textarea>
+          <span id="charCount" class="char-count">0/300</span>
         </div>
       </div>
       <div class="divider"></div>
       <button class="btn-evaluate" id="btnEvaluate" onclick="runEvaluation()">Evaluate Tool</button>
+    </div>
+
+    <!-- Tool Discovery -->
+    <div class="discover-section" id="discoverSection">
+      <div class="discover-title">Not sure where to start?</div>
+      <div class="discover-subtitle">Click any tool below to evaluate it instantly.</div>
+      <div class="discover-grid">
+        <span class="discover-chip" onclick="quickEval('Cursor')">Cursor</span>
+        <span class="discover-chip" onclick="quickEval('Lovable')">Lovable</span>
+        <span class="discover-chip" onclick="quickEval('n8n')">n8n</span>
+        <span class="discover-chip" onclick="quickEval('Bolt.new')">Bolt.new</span>
+        <span class="discover-chip" onclick="quickEval('Replit')">Replit</span>
+        <span class="discover-chip" onclick="quickEval('Perplexity')">Perplexity</span>
+        <span class="discover-chip" onclick="quickEval('NotebookLM')">NotebookLM</span>
+        <span class="discover-chip" onclick="quickEval('Windsurf')">Windsurf</span>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -311,7 +332,18 @@
     <div class="error-container" id="errorContainer"><div class="error-text" id="errorText">Something went wrong.</div><button class="btn-retry" onclick="resetForm()">Try again</button></div>
     <div class="results-container" id="results"></div>
 
-    <!-- Privacy / How it works -->
+    <!-- Email capture for PDF (shown after results) -->
+    <div class="email-capture" id="emailCapture">
+      <div class="email-capture-title">Get this evaluation as a branded PDF</div>
+      <div class="email-capture-text">Enter your email and we'll generate a clean PDF you can share with your team. We'll also send you future tool evaluations.</div>
+      <div class="email-capture-row">
+        <input type="email" id="captureEmail" placeholder="your@email.com" />
+        <button class="btn-email-pdf" onclick="captureAndPrint()">Get PDF</button>
+      </div>
+      <div class="email-skip" onclick="skipAndPrint()">Skip — just download the PDF</div>
+    </div>
+
+    <!-- Privacy -->
     <div class="privacy-section" id="privacySection">
       <div class="privacy-toggle" onclick="this.parentElement.classList.toggle('open')">
         <span class="privacy-toggle-title">How this tool works &amp; privacy</span>
@@ -320,8 +352,8 @@
       <div class="privacy-content">
         <p><strong>What powers it:</strong> This tool uses the Anthropic Claude API (Sonnet 4.6) with web search enabled. When you click Evaluate, your inputs are sent to Claude, which researches the tool in real time and produces a structured evaluation.</p>
         <p><strong>What we store:</strong> Nothing. Evaluations are not saved on our servers. Your inputs are not logged, tracked, or used to train any AI model. Each evaluation is a one-time request.</p>
-        <p><strong>Where data goes:</strong> Your inputs are sent to Anthropic's API for processing. Anthropic's data handling policy applies. <a href="https://www.anthropic.com/privacy" target="_blank">Read Anthropic's privacy policy</a>.</p>
-        <p><strong>Who built it:</strong> This tool is built and maintained by <a href="https://cashandcache.substack.com/" target="_blank">Cash &amp; Cache</a>. Questions or feedback? Reply to any newsletter email or drop a comment on the article.</p>
+        <p><strong>Where data goes:</strong> Your inputs are sent to Anthropic's API for processing. <a href="https://www.anthropic.com/privacy" target="_blank">Read Anthropic's privacy policy</a>.</p>
+        <p><strong>Who built it:</strong> Built by <a href="https://cashandcache.substack.com/" target="_blank">Cash &amp; Cache</a>. Questions? Reply to any newsletter email or drop a comment on the article.</p>
       </div>
     </div>
 
@@ -338,105 +370,70 @@
     (function checkAccess() {
       var params = new URLSearchParams(window.location.search);
       var code = params.get('code');
-      if (code) {
-        ACCESS_CODE = code;
-        sessionStorage.setItem('prt_code', code);
-      } else {
-        var stored = sessionStorage.getItem('prt_code');
-        if (stored) { ACCESS_CODE = stored; }
-      }
-      if (!ACCESS_CODE) {
-        document.getElementById('accessGate').style.display = 'block';
-        document.getElementById('formCard').style.display = 'none';
-      } else {
-        document.getElementById('accessGate').style.display = 'none';
-        document.getElementById('formCard').style.display = 'block';
-      }
+      if (code) { ACCESS_CODE = code; sessionStorage.setItem('prt_code', code); }
+      else { var stored = sessionStorage.getItem('prt_code'); if (stored) { ACCESS_CODE = stored; } }
+      if (!ACCESS_CODE) { document.getElementById('accessGate').style.display = 'block'; document.getElementById('formCard').style.display = 'none'; document.getElementById('discoverSection').style.display = 'none'; }
+      else { document.getElementById('accessGate').style.display = 'none'; document.getElementById('formCard').style.display = 'block'; }
     })();
 
     /* --- Theme Toggle --- */
-    function toggleTheme() {
-      var html = document.documentElement;
-      var current = html.getAttribute('data-theme');
-      var next = current === 'light' ? 'dark' : 'light';
-      html.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
-      updateToggleUI(next);
-    }
-    function updateToggleUI(theme) {
-      document.getElementById('themeIcon').innerHTML = theme === 'dark' ? '&#9788;' : '&#9790;';
-      document.getElementById('themeLabel').textContent = theme === 'dark' ? 'Light' : 'Night';
-    }
-    (function() {
-      var saved = localStorage.getItem('theme');
-      if (saved) { document.documentElement.setAttribute('data-theme', saved); updateToggleUI(saved); }
-    })();
+    function toggleTheme() { var h=document.documentElement,c=h.getAttribute('data-theme'),n=c==='light'?'dark':'light';h.setAttribute('data-theme',n);localStorage.setItem('theme',n);updateToggleUI(n); }
+    function updateToggleUI(t) { document.getElementById('themeIcon').innerHTML=t==='dark'?'&#9788;':'&#9790;';document.getElementById('themeLabel').textContent=t==='dark'?'Light':'Night'; }
+    (function(){var s=localStorage.getItem('theme');if(s){document.documentElement.setAttribute('data-theme',s);updateToggleUI(s);}})();
+
+    /* --- Tool Discovery --- */
+    function quickEval(name) { document.getElementById('toolName').value = name; document.getElementById('toolName').focus(); window.scrollTo({top: 0, behavior: 'smooth'}); }
 
     /* --- Core Logic --- */
     function getScoreClass(s){if(s>=4)return'score-high';if(s>=3)return'score-mid';if(s>=2)return'score-low';return'score-poor';}
-    function getScoreLabel(s){if(s>=4)return'Strong';if(s>=3)return'Adequate';if(s>=2)return'Below avg';return'Poor';}
     function formatLabel(k){var m={core_capability:'Core Capability',production_readiness:'Production Readiness',pricing_value:'Pricing & Value',api_integration:'API & Integration',reliability_scale:'Reliability & Scale',data_privacy:'Data Privacy',differentiation:'Differentiation',documentation_support:'Docs & Support'};return m[k]||k;}
-    function showLoading(){document.getElementById('formCard').style.display='none';document.getElementById('loading').classList.add('active');document.getElementById('results').classList.remove('active');document.getElementById('errorContainer').classList.remove('active');var step=0;window._li=setInterval(function(){step=(step+1)%loadingSteps.length;document.getElementById('loadingStep').textContent=loadingSteps[step];},4000);}
+    function showLoading(){document.getElementById('formCard').style.display='none';document.getElementById('discoverSection').style.display='none';document.getElementById('loading').classList.add('active');document.getElementById('results').classList.remove('active');document.getElementById('errorContainer').classList.remove('active');document.getElementById('emailCapture').classList.remove('active');var step=0;window._li=setInterval(function(){step=(step+1)%loadingSteps.length;document.getElementById('loadingStep').textContent=loadingSteps[step];},4000);}
     function hideLoading(){document.getElementById('loading').classList.remove('active');clearInterval(window._li);}
     function showError(msg){hideLoading();document.getElementById('errorText').textContent=msg;document.getElementById('errorContainer').classList.add('active');}
-    function resetForm(){document.getElementById('formCard').style.display='block';document.getElementById('results').classList.remove('active');document.getElementById('errorContainer').classList.remove('active');hideLoading();}
+    function resetForm(){document.getElementById('formCard').style.display='block';document.getElementById('discoverSection').style.display='block';document.getElementById('results').classList.remove('active');document.getElementById('errorContainer').classList.remove('active');document.getElementById('emailCapture').classList.remove('active');hideLoading();}
+
+    /* --- Email capture + PDF --- */
+    function captureAndPrint() {
+      var email = document.getElementById('captureEmail').value.trim();
+      if (email) { /* Future: send email to your collection endpoint */ console.log('Lead captured:', email); }
+      window.print();
+    }
+    function skipAndPrint() { window.print(); }
 
     function renderResults(data){
       hideLoading();
       if(data.raw){document.getElementById('results').innerHTML='<div class="result-section"><div class="result-section-title">Evaluation</div><div class="result-text">'+data.content.replace(/\n/g,'<br>')+'</div></div><button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button>';document.getElementById('results').classList.add('active');return;}
       var e=data.evaluation;
 
-      /* --- Scorecard with expandable rationale --- */
+      /* --- Scorecard --- */
       var sc='<div class="score-legend"><div class="score-legend-item"><div class="score-legend-dot high"></div>4-5 Strong</div><div class="score-legend-item"><div class="score-legend-dot mid"></div>3 Adequate</div><div class="score-legend-item"><div class="score-legend-dot low"></div>2 Below avg</div><div class="score-legend-item"><div class="score-legend-dot poor"></div>1 Poor</div></div>';
-      if(e.scorecard){var idx=0;for(var k in e.scorecard){var v=e.scorecard[k],pct=(v.score/5)*100,cls=getScoreClass(v.score);sc+='<div class="scorecard-row '+cls+'" onclick="this.classList.toggle(\'expanded\')" title="Click for detail"><div class="scorecard-label">'+formatLabel(k)+'</div><div class="scorecard-bar-bg"><div class="scorecard-bar-fill" style="width:'+pct+'%"></div></div><div class="scorecard-value">'+v.score+'</div></div><div class="scorecard-rationale">'+v.rationale+'</div>';idx++;}}
+      if(e.scorecard){for(var k in e.scorecard){var v=e.scorecard[k],pct=(v.score/5)*100,cls=getScoreClass(v.score);sc+='<div class="scorecard-row '+cls+'" onclick="this.classList.toggle(\'expanded\')" title="Click for detail"><div class="scorecard-label">'+formatLabel(k)+'</div><div class="scorecard-bar-bg"><div class="scorecard-bar-fill" style="width:'+pct+'%"></div></div><div class="scorecard-value">'+v.score+'</div></div><div class="scorecard-rationale">'+v.rationale+'</div>';}}
       sc+='<div class="scorecard-hint">Click any row to see the rationale</div>';
 
-      /* --- Alternatives --- */
-      var alt='';if(e.alternatives){alt=e.alternatives.map(function(a){return'<div class="alternative-item"><span class="alternative-name">'+a.name+':</span><span class="alternative-why">'+a.why+'</span></div>';}).join('');}
+      /* --- Alternatives with clickable links --- */
+      var alt='';if(e.alternatives){alt=e.alternatives.map(function(a){var nameHtml=a.url?'<a href="'+a.url+'" target="_blank" class="alternative-name">'+a.name+' &#8599;</a>':'<span class="alternative-name" style="color:var(--text-primary)">'+a.name+':</span>';return'<div class="alternative-item">'+nameHtml+'<span class="alternative-why">'+a.why+'</span></div>';}).join('');}
 
-      /* --- FIX 1B: Bottom line moved to top, right after header card --- */
-      /* --- PHASE 3: Added TOC and PDF export --- */
-      var tocItems = [
-        {id:'sec-bottom-line',label:'Bottom Line'},
-        {id:'sec-what',label:'What It Does'},
-        {id:'sec-scorecard',label:'Scorecard'},
-        {id:'sec-who',label:'Who It\'s For'},
-        {id:'sec-strengths',label:'Strengths'},
-        {id:'sec-limitations',label:'Limitations'},
-        {id:'sec-watchout',label:'Watch Out'},
-        {id:'sec-buildvbuy',label:'Build vs Buy'},
-        {id:'sec-alternatives',label:'Alternatives'},
-        {id:'sec-cost',label:'Cost'}
-      ];
+      /* --- Tool name with clickable link --- */
+      var toolNameHtml = e.tool_url ? '<a href="'+e.tool_url+'" target="_blank">'+(e.tool_name||'Evaluation')+' &#8599;</a>' : (e.tool_name||'Evaluation');
+
+      /* --- TOC --- */
+      var tocItems=[{id:'sec-bottom-line',label:'Bottom Line'},{id:'sec-what',label:'What It Does'},{id:'sec-scorecard',label:'Scorecard'},{id:'sec-who',label:'Who It\'s For'},{id:'sec-strengths',label:'Strengths'},{id:'sec-limitations',label:'Limitations'},{id:'sec-watchout',label:'Watch Out'},{id:'sec-buildvbuy',label:'Build vs Buy'},{id:'sec-alternatives',label:'Alternatives'},{id:'sec-cost',label:'Cost'}];
       var tocHtml='<div class="result-toc"><div class="result-toc-title">Jump to</div><div class="result-toc-list">'+tocItems.map(function(t){return'<a href="#'+t.id+'">'+t.label+'</a>';}).join('')+'</div></div>';
 
       document.getElementById('results').innerHTML=
-        '<div class="result-header-card"><div class="result-header"><div class="result-tool-name">'+(e.tool_name||'Evaluation')+'</div><div class="result-overall-score">'+(e.overall_score||'--')+'<span>/ 5</span></div></div>'+(e.one_line_verdict?'<div class="result-verdict">"'+e.one_line_verdict+'"</div>':'')+'</div>'+
-
+        '<div class="result-header-card"><div class="result-header"><div class="result-tool-name">'+toolNameHtml+'</div><div class="result-overall-score">'+(e.overall_score||'--')+'<span>/ 5</span></div></div>'+(e.one_line_verdict?'<div class="result-verdict">"'+e.one_line_verdict+'"</div>':'')+'</div>'+
         tocHtml+
-
-        /* Bottom line first */
         (e.bottom_line?'<div class="result-section" id="sec-bottom-line"><div class="result-section-title">Bottom line</div><div class="bottom-line">'+e.bottom_line+'</div></div>':'')+
-
         '<div class="result-section" id="sec-what"><div class="result-section-title">What it does</div><div class="result-text">'+(e.what_it_does||'')+'</div></div>'+
-
         '<div class="result-section" id="sec-scorecard"><div class="result-section-title">Scorecard</div>'+sc+(e.calibration_note?'<div class="calibration-note">'+e.calibration_note+'</div>':'')+'</div>'+
-
         '<div class="result-section" id="sec-who"><div class="result-section-title">Who it is for</div><ul class="result-list default">'+(e.who_its_for||[]).map(function(w){return'<li>'+w+'</li>';}).join('')+'</ul></div>'+
-
         '<div class="result-section" id="sec-strengths"><div class="result-section-title">Strengths</div><ul class="result-list strengths">'+(e.strengths||[]).map(function(s){return'<li>'+s+'</li>';}).join('')+'</ul></div>'+
-
         '<div class="result-section" id="sec-limitations"><div class="result-section-title">Limitations</div><ul class="result-list limitations">'+(e.limitations||[]).map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul></div>'+
-
         '<div class="result-section" id="sec-watchout"><div class="result-section-title">Watch out for</div><ul class="result-list warnings">'+(e.watch_out_for||[]).map(function(w){return'<li>'+w+'</li>';}).join('')+'</ul></div>'+
-
         '<div class="result-section" id="sec-buildvbuy"><div class="result-section-title">Build vs Buy</div><div class="result-text">'+(e.build_vs_buy||'')+'</div></div>'+
-
         '<div class="result-section" id="sec-alternatives"><div class="result-section-title">Alternatives worth comparing</div>'+alt+'</div>'+
-
         '<div class="result-section" id="sec-cost"><div class="result-section-title">Practical cost</div><div class="result-text">'+(e.practical_cost||'')+'</div></div>'+
-
-        '<div class="results-actions"><button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button><button class="btn-pdf" onclick="window.print()">&#128196; Save as PDF</button></div>';
+        '<div class="results-actions"><button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button><button class="btn-pdf" onclick="document.getElementById(\'emailCapture\').classList.add(\'active\');this.style.display=\'none\';">&#128196; Save as PDF</button></div>';
 
       document.getElementById('results').classList.add('active');
       document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
@@ -445,11 +442,8 @@
     async function runEvaluation(){
       var tn=document.getElementById('toolName').value.trim();
       if(!tn){document.getElementById('toolName').focus();return;}
-
-      /* FIX 1C: Auto-prepend https:// if URL entered without protocol */
       var urlVal=document.getElementById('toolUrl').value.trim();
       if(urlVal && !urlVal.match(/^https?:\/\//i)){urlVal='https://'+urlVal;}
-
       var payload={toolName:tn,toolUrl:urlVal,role:document.getElementById('role').value,technicalComfort:document.getElementById('technicalComfort').value,evaluationPurpose:document.getElementById('evaluationPurpose').value,budget:document.getElementById('budget').value,currentStack:document.getElementById('currentStack').value.trim(),additionalContext:document.getElementById('additionalContext').value.trim(),accessCode:ACCESS_CODE};
       showLoading();
       try{var res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok){var err=await res.json();throw new Error(err.error||'Request failed');}var data=await res.json();renderResults(data);}catch(err){showError(err.message||'Evaluation failed. Please try again.');}
