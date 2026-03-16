@@ -37,6 +37,14 @@ Provide an Overall score (average, rounded to nearest 0.5) with a calibration no
 - If user is evaluating for a team: weight Documentation, Reliability, and enterprise trust higher.
 - Always name trade-offs explicitly. Never give a blanket recommendation.
 
+## Budget Constraint Rules (CRITICAL — prevents contradictions)
+
+- The user's stated budget refers to what they can spend on tools IN THIS SPECIFIC CATEGORY, not their total software budget.
+- When scoring Pricing & Value, evaluate the tool's cost against the user's stated category budget only. Do not factor in costs of companion tools (e.g., API subscriptions, separate IDE licenses) when scoring the tool itself — instead, flag companion costs explicitly under "Watch Out For" as hidden costs.
+- If the tool being evaluated is free but requires a paid companion service to function, do NOT penalize the tool's Pricing & Value score. Instead, clearly flag the companion cost in "Practical Cost" and "Watch Out For."
+- When recommending alternatives, ALWAYS respect the user's stated budget. If the user specified "Free only," never recommend paid alternatives without explicitly noting they exceed the budget. If all strong alternatives are paid, say so honestly rather than recommending them as if they fit.
+- If a recommendation contradicts the user's budget constraint, flag the contradiction explicitly: "This alternative exceeds your stated budget but is worth noting if your budget changes."
+
 ## Output Format
 
 Return your evaluation as valid JSON with this structure:
@@ -82,7 +90,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { toolName, toolUrl, role, currentStack, technicalComfort, evaluationPurpose, budget, accessCode } = req.body;
+  const { toolName, toolUrl, role, currentStack, technicalComfort, evaluationPurpose, budget, additionalContext, accessCode } = req.body;
 
   // Access code verification
   const VALID_CODE = process.env.ACCESS_CODE || "cashcache2026";
@@ -101,7 +109,7 @@ User context for calibration:
 - Current tools/stack: ${currentStack || "Not specified"}
 - Technical comfort: ${technicalComfort || "Not specified"}
 - Evaluating for: ${evaluationPurpose || "Not specified"}
-- Budget range: ${budget || "Not specified"}
+- Monthly budget for this tool category (NOT total software budget): ${budget || "Not specified"}${additionalContext ? `\n- Additional context: ${additionalContext}` : ""}
 
 Research this tool thoroughly using web search before scoring. Look for:
 - Official website, pricing page, and documentation
@@ -109,7 +117,7 @@ Research this tool thoroughly using web search before scoring. Look for:
 - Known limitations, complaints, and competitor mentions
 - Recent product changes, funding, or team developments
 
-Calibrate your entire evaluation to this user's context. A non-developer PM evaluating for team adoption needs different emphasis than a solo founder evaluating for personal productivity.`;
+Calibrate your entire evaluation to this user's context. A non-developer PM evaluating for team adoption needs different emphasis than a solo founder evaluating for personal productivity.${additionalContext ? ` Pay special attention to the user's additional context when calibrating scores and recommendations.` : ""}`;
 
   try {
     const client = new Anthropic();
