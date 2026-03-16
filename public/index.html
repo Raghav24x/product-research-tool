@@ -423,7 +423,7 @@
       var toolNameHtml = e.tool_url ? '<a href="'+e.tool_url+'" target="_blank">'+(e.tool_name||'Evaluation')+' &#8599;</a>' : (e.tool_name||'Evaluation');
 
       /* --- TOC --- */
-      var tocItems=[{id:'sec-fit',label:'How It Fits'},{id:'sec-what',label:'What It Does'},{id:'sec-scorecard',label:'Scorecard'},{id:'sec-who',label:'Who It\'s For'},{id:'sec-strengths',label:'Strengths'},{id:'sec-limitations',label:'Limitations'},{id:'sec-watchout',label:'Watch Out'},{id:'sec-buildvbuy',label:'Build vs Buy'},{id:'sec-alternatives',label:'Alternatives'},{id:'sec-cost',label:'Cost'}];
+      var tocItems=[{id:'sec-fit',label:'How It Fits'},{id:'sec-what',label:'What It Does'},{id:'sec-scorecard',label:'Scorecard'},{id:'sec-who',label:'Who It\'s For'},{id:'sec-strengths',label:'Strengths'},{id:'sec-limitations',label:'Limitations'},{id:'sec-watchout',label:'Watch Out'},{id:'sec-buildvbuy',label:'Build vs Buy'},{id:'sec-alternatives',label:'Alternatives'},{id:'sec-cost',label:'Cost'},{id:'sec-community',label:'Community*'}];
       var tocHtml='<div class="result-toc"><div class="result-toc-title">Jump to</div><div class="result-toc-list">'+tocItems.map(function(t){return'<a href="#'+t.id+'">'+t.label+'</a>';}).join('')+'</div></div>';
 
       document.getElementById('results').innerHTML=
@@ -439,6 +439,8 @@
         '<div class="result-section" id="sec-buildvbuy"><div class="result-section-title">Build vs Buy</div><div class="result-text">'+(e.build_vs_buy||'')+'</div></div>'+
         '<div class="result-section" id="sec-alternatives"><div class="result-section-title">Alternatives worth comparing</div>'+alt+'</div>'+
         '<div class="result-section" id="sec-cost"><div class="result-section-title">Practical cost</div><div class="result-text">'+(e.practical_cost||'')+'</div></div>'+
+
+        ((e.community_opinions&&e.community_opinions.length)?'<div class="result-section" id="sec-community" style="border-left:3px solid var(--amber);"><div class="result-section-title">Community opinions *</div><div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;font-style:italic;">Unverified public opinions from forums and social media. Not confirmed by reputable publications. Use as signal, not as fact.</div><ul class="result-list limitations">'+(e.community_opinions).map(function(c){return'<li>'+c+'</li>';}).join('')+'</ul></div>':'')+
         '<div class="results-actions"><button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button><button class="btn-pdf" onclick="document.getElementById(\'emailCapture\').classList.add(\'active\');this.style.display=\'none\';">&#128196; Save as PDF</button></div>';
 
       document.getElementById('results').classList.add('active');
