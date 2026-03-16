@@ -164,6 +164,53 @@
     .btn-new-eval:hover { background: var(--orange-light); }
     [data-theme="dark"] .btn-new-eval:hover { background: rgba(255,140,66,0.1); }
 
+    /* --- Results Action Bar --- */
+    .results-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+    .btn-pdf { font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-pdf:hover { border-color: var(--cyan); background: var(--cyan-light); }
+    [data-theme="dark"] .btn-pdf:hover { background: rgba(0,217,255,0.08); }
+
+    /* --- TOC --- */
+    .result-toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 12px; box-shadow: var(--shadow-sm); }
+    .result-toc-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+    .result-toc-list { display: flex; flex-wrap: wrap; gap: 6px 16px; list-style: none; padding: 0; }
+    .result-toc-list a { font-size: 13px; color: var(--cyan-dark); text-decoration: none; font-weight: 500; }
+    .result-toc-list a:hover { text-decoration: underline; }
+
+    /* --- Privacy Section --- */
+    .privacy-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-top: 24px; box-shadow: var(--shadow-sm); }
+    .privacy-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .privacy-toggle-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+    .privacy-toggle-icon { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
+    .privacy-section.open .privacy-toggle-icon { transform: rotate(180deg); }
+    .privacy-content { display: none; margin-top: 14px; font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+    .privacy-section.open .privacy-content { display: block; }
+    .privacy-content p { margin-bottom: 8px; }
+    .privacy-content a { color: var(--cyan-dark); text-decoration: none; }
+    .privacy-content a:hover { text-decoration: underline; }
+
+    /* --- Print / PDF styles --- */
+    @media print {
+      .topbar, .loading-container, .error-container, .btn-new-eval, .btn-pdf, .results-actions, .result-toc, .privacy-section, .footer, .gate-container, .form-card, .header-badge, .scorecard-hint, .score-legend { display: none !important; }
+      body { background: #fff !important; color: #0A1628 !important; }
+      .container { padding: 0 !important; max-width: 100% !important; }
+      .header { margin-bottom: 20px !important; }
+      .header h1 { font-size: 22px !important; }
+      .header p { display: none; }
+      .results-container { display: block !important; }
+      .result-header-card { background: #0A1628 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 16px 20px !important; margin-bottom: 12px !important; }
+      .result-tool-name { color: #fff !important; font-size: 18px !important; }
+      .result-overall-score { color: #00D9FF !important; font-size: 22px !important; }
+      .result-overall-score span { color: rgba(255,255,255,0.4) !important; }
+      .result-verdict { color: rgba(255,255,255,0.65) !important; }
+      .result-section { box-shadow: none !important; border: 1px solid #E2E4E9 !important; padding: 14px 18px !important; margin-bottom: 8px !important; page-break-inside: avoid; }
+      .scorecard-row { padding: 6px 0 !important; }
+      .scorecard-bar-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .scorecard-rationale { display: block !important; }
+      .print-footer { display: block !important; text-align: center; font-size: 11px; color: #8892A4; padding-top: 20px; border-top: 1px solid #E2E4E9; margin-top: 20px; }
+    }
+    .print-footer { display: none; }
+
     .footer { text-align: center; padding-top: 40px; font-size: 12px; color: var(--text-muted); }
     .footer a { color: var(--cyan-dark); text-decoration: none; }
     .footer a:hover { text-decoration: underline; }
@@ -263,6 +310,22 @@
 
     <div class="error-container" id="errorContainer"><div class="error-text" id="errorText">Something went wrong.</div><button class="btn-retry" onclick="resetForm()">Try again</button></div>
     <div class="results-container" id="results"></div>
+
+    <!-- Privacy / How it works -->
+    <div class="privacy-section" id="privacySection">
+      <div class="privacy-toggle" onclick="this.parentElement.classList.toggle('open')">
+        <span class="privacy-toggle-title">How this tool works &amp; privacy</span>
+        <span class="privacy-toggle-icon">&#9660;</span>
+      </div>
+      <div class="privacy-content">
+        <p><strong>What powers it:</strong> This tool uses the Anthropic Claude API (Sonnet 4.6) with web search enabled. When you click Evaluate, your inputs are sent to Claude, which researches the tool in real time and produces a structured evaluation.</p>
+        <p><strong>What we store:</strong> Nothing. Evaluations are not saved on our servers. Your inputs are not logged, tracked, or used to train any AI model. Each evaluation is a one-time request.</p>
+        <p><strong>Where data goes:</strong> Your inputs are sent to Anthropic's API for processing. Anthropic's data handling policy applies. <a href="https://www.anthropic.com/privacy" target="_blank">Read Anthropic's privacy policy</a>.</p>
+        <p><strong>Who built it:</strong> This tool is built and maintained by <a href="https://cashandcache.substack.com/" target="_blank">Cash &amp; Cache</a>. Questions or feedback? Reply to any newsletter email or drop a comment on the article.</p>
+      </div>
+    </div>
+
+    <div class="print-footer">Evaluation generated by Product Research Tool &mdash; cashandcache.substack.com</div>
     <div class="footer">Built by <a href="https://cashandcache.substack.com/" target="_blank">Cash &amp; Cache</a> &middot; Powered by Claude &middot; <a href="https://cashandcache.substack.com/subscribe?coupon=f12e9091" target="_blank">Subscribe</a></div>
   </div>
 
@@ -332,31 +395,48 @@
       var alt='';if(e.alternatives){alt=e.alternatives.map(function(a){return'<div class="alternative-item"><span class="alternative-name">'+a.name+':</span><span class="alternative-why">'+a.why+'</span></div>';}).join('');}
 
       /* --- FIX 1B: Bottom line moved to top, right after header card --- */
+      /* --- PHASE 3: Added TOC and PDF export --- */
+      var tocItems = [
+        {id:'sec-bottom-line',label:'Bottom Line'},
+        {id:'sec-what',label:'What It Does'},
+        {id:'sec-scorecard',label:'Scorecard'},
+        {id:'sec-who',label:'Who It\'s For'},
+        {id:'sec-strengths',label:'Strengths'},
+        {id:'sec-limitations',label:'Limitations'},
+        {id:'sec-watchout',label:'Watch Out'},
+        {id:'sec-buildvbuy',label:'Build vs Buy'},
+        {id:'sec-alternatives',label:'Alternatives'},
+        {id:'sec-cost',label:'Cost'}
+      ];
+      var tocHtml='<div class="result-toc"><div class="result-toc-title">Jump to</div><div class="result-toc-list">'+tocItems.map(function(t){return'<a href="#'+t.id+'">'+t.label+'</a>';}).join('')+'</div></div>';
+
       document.getElementById('results').innerHTML=
         '<div class="result-header-card"><div class="result-header"><div class="result-tool-name">'+(e.tool_name||'Evaluation')+'</div><div class="result-overall-score">'+(e.overall_score||'--')+'<span>/ 5</span></div></div>'+(e.one_line_verdict?'<div class="result-verdict">"'+e.one_line_verdict+'"</div>':'')+'</div>'+
 
+        tocHtml+
+
         /* Bottom line first */
-        (e.bottom_line?'<div class="result-section"><div class="result-section-title">Bottom line</div><div class="bottom-line">'+e.bottom_line+'</div></div>':'')+
+        (e.bottom_line?'<div class="result-section" id="sec-bottom-line"><div class="result-section-title">Bottom line</div><div class="bottom-line">'+e.bottom_line+'</div></div>':'')+
 
-        '<div class="result-section"><div class="result-section-title">What it does</div><div class="result-text">'+(e.what_it_does||'')+'</div></div>'+
+        '<div class="result-section" id="sec-what"><div class="result-section-title">What it does</div><div class="result-text">'+(e.what_it_does||'')+'</div></div>'+
 
-        '<div class="result-section"><div class="result-section-title">Scorecard</div>'+sc+(e.calibration_note?'<div class="calibration-note">'+e.calibration_note+'</div>':'')+'</div>'+
+        '<div class="result-section" id="sec-scorecard"><div class="result-section-title">Scorecard</div>'+sc+(e.calibration_note?'<div class="calibration-note">'+e.calibration_note+'</div>':'')+'</div>'+
 
-        '<div class="result-section"><div class="result-section-title">Who it is for</div><ul class="result-list default">'+(e.who_its_for||[]).map(function(w){return'<li>'+w+'</li>';}).join('')+'</ul></div>'+
+        '<div class="result-section" id="sec-who"><div class="result-section-title">Who it is for</div><ul class="result-list default">'+(e.who_its_for||[]).map(function(w){return'<li>'+w+'</li>';}).join('')+'</ul></div>'+
 
-        '<div class="result-section"><div class="result-section-title">Strengths</div><ul class="result-list strengths">'+(e.strengths||[]).map(function(s){return'<li>'+s+'</li>';}).join('')+'</ul></div>'+
+        '<div class="result-section" id="sec-strengths"><div class="result-section-title">Strengths</div><ul class="result-list strengths">'+(e.strengths||[]).map(function(s){return'<li>'+s+'</li>';}).join('')+'</ul></div>'+
 
-        '<div class="result-section"><div class="result-section-title">Limitations</div><ul class="result-list limitations">'+(e.limitations||[]).map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul></div>'+
+        '<div class="result-section" id="sec-limitations"><div class="result-section-title">Limitations</div><ul class="result-list limitations">'+(e.limitations||[]).map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul></div>'+
 
-        '<div class="result-section"><div class="result-section-title">Watch out for</div><ul class="result-list warnings">'+(e.watch_out_for||[]).map(function(w){return'<li>'+w+'</li>';}).join('')+'</ul></div>'+
+        '<div class="result-section" id="sec-watchout"><div class="result-section-title">Watch out for</div><ul class="result-list warnings">'+(e.watch_out_for||[]).map(function(w){return'<li>'+w+'</li>';}).join('')+'</ul></div>'+
 
-        '<div class="result-section"><div class="result-section-title">Build vs Buy</div><div class="result-text">'+(e.build_vs_buy||'')+'</div></div>'+
+        '<div class="result-section" id="sec-buildvbuy"><div class="result-section-title">Build vs Buy</div><div class="result-text">'+(e.build_vs_buy||'')+'</div></div>'+
 
-        '<div class="result-section"><div class="result-section-title">Alternatives worth comparing</div>'+alt+'</div>'+
+        '<div class="result-section" id="sec-alternatives"><div class="result-section-title">Alternatives worth comparing</div>'+alt+'</div>'+
 
-        '<div class="result-section"><div class="result-section-title">Practical cost</div><div class="result-text">'+(e.practical_cost||'')+'</div></div>'+
+        '<div class="result-section" id="sec-cost"><div class="result-section-title">Practical cost</div><div class="result-text">'+(e.practical_cost||'')+'</div></div>'+
 
-        '<button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button>';
+        '<div class="results-actions"><button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button><button class="btn-pdf" onclick="window.print()">&#128196; Save as PDF</button></div>';
 
       document.getElementById('results').classList.add('active');
       document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
