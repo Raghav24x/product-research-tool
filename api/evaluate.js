@@ -124,11 +124,20 @@ User context for calibration:
 - Evaluating for: ${evaluationPurpose || "Not specified"}
 - Monthly budget for this tool category (NOT total software budget): ${budget || "Not specified"}${additionalContext ? `\n- Additional context: ${additionalContext}` : ""}
 
-Research this tool thoroughly using web search before scoring. Look for:
-- Official website, pricing page, and documentation
+Research this tool thoroughly using web search before scoring.
+
+${toolUrl ? `IMPORTANT: The user provided this URL: ${toolUrl}
+- ALWAYS fetch and analyze this URL first, even before searching by name. Extract product description, features, pricing, and any other relevant information directly from the page.
+- If the tool is not well-known and web search by name returns limited results, the provided URL is your PRIMARY source. Build your evaluation primarily from what you find on the site itself — product pages, pricing pages, documentation, about pages, and any linked resources.
+- Do NOT return "cannot find data" if a URL was provided. Analyze whatever is on the site and be transparent about what you could and couldn't verify externally.` : ''}
+
+Look for:
+- Official website, pricing page, and documentation${toolUrl ? ' (start with the provided URL)' : ''}
 - Independent reviews and user feedback from the last 6 months
 - Known limitations, complaints, and competitor mentions
 - Recent product changes, funding, or team developments
+
+If the tool is lesser-known and external coverage is sparse, that itself is a finding worth reporting: flag limited external validation under "Watch Out For" and adjust the Documentation & Support and Reliability scores accordingly. A tool with no independent reviews is not necessarily bad — but the lack of external validation is a risk factor the user should know about.
 
 Calibrate your entire evaluation to this user's context. A non-developer PM evaluating for team adoption needs different emphasis than a solo founder evaluating for personal productivity.${additionalContext ? ` Pay special attention to the user's additional context when calibrating scores and recommendations.` : ""}`;
 
