@@ -302,6 +302,15 @@
         </div>
       </div>
       <div class="divider"></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <span style="font-size:13px;font-weight:700;color:var(--text-muted);">Evaluation depth:</span>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text-secondary);">
+          <input type="radio" name="evalMode" value="quick" style="accent-color:var(--cyan);" /> Quick <span style="font-size:11px;color:var(--text-muted);">(~1 min, concise)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text-secondary);">
+          <input type="radio" name="evalMode" value="deep" checked style="accent-color:var(--cyan);" /> Deep <span style="font-size:11px;color:var(--text-muted);">(~2-3 min, thorough)</span>
+        </label>
+      </div>
       <button class="btn-evaluate" id="btnEvaluate" onclick="runEvaluation()">Evaluate Tool</button>
     </div>
 
@@ -350,9 +359,9 @@
         <span class="privacy-toggle-icon">&#9660;</span>
       </div>
       <div class="privacy-content">
-        <p><strong>What powers it:</strong> This tool uses the Anthropic Claude API (Sonnet 4.5) with web search enabled. When you click Evaluate, your inputs are sent to Claude, which researches the tool in real time and produces a structured evaluation. Sources are limited to official websites, reputable publications, and verified review platforms only.</p>
-        <p><strong>What we store:</strong> Nothing. Evaluations are not saved on our servers. Your inputs are not logged, tracked, or used to train any AI model. Each evaluation is a one-time request.</p>
-        <p><strong>Where data goes:</strong> Your inputs are sent to Anthropic's API for processing. <a href="https://www.anthropic.com/privacy" target="_blank">Read Anthropic's privacy policy</a>.</p>
+        <p><strong>What powers it:</strong> This tool uses the Google Gemini API (2.5 Flash) with Google Search grounding. When you click Evaluate, your inputs are sent to Gemini, which researches the tool in real time and produces a structured evaluation.</p>
+        <p><strong>What we store:</strong> Evaluations are not saved on our servers. If you optionally enter your email for PDF delivery, your email and the tool name are logged. No other data is stored or used for training.</p>
+        <p><strong>Where data goes:</strong> Your inputs are sent to Google's Gemini API for processing. <a href="https://ai.google.dev/gemini-api/terms" target="_blank">Read Google's API terms</a>.</p>
         <p><strong>Who built it:</strong> Built by <a href="https://cashandcache.substack.com/" target="_blank">Cash &amp; Cache</a>. Questions? Reply to any newsletter email or drop a comment on the article.</p>
       </div>
     </div>
@@ -401,9 +410,18 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, toolName: _lastToolName })
-      }).then(function() { window.print(); }).catch(function() { window.print(); });
+      }).then(function() { 
+        document.getElementById('emailCapture').classList.remove('active');
+        setTimeout(function() { window.print(); }, 300);
+      }).catch(function() { 
+        document.getElementById('emailCapture').classList.remove('active');
+        setTimeout(function() { window.print(); }, 300);
+      });
     }
-    function skipAndPrint() { window.print(); }
+    function skipAndPrint() { 
+      document.getElementById('emailCapture').classList.remove('active');
+      setTimeout(function() { window.print(); }, 300);
+    }
 
     function renderResults(data){
       hideLoading();
@@ -452,9 +470,13 @@
       if(!tn){document.getElementById('toolName').focus();return;}
       var urlVal=document.getElementById('toolUrl').value.trim();
       if(urlVal && !urlVal.match(/^https?:\/\//i)){urlVal='https://'+urlVal;}
-      var payload={toolName:tn,toolUrl:urlVal,role:document.getElementById('role').value,technicalComfort:document.getElementById('technicalComfort').value,evaluationPurpose:document.getElementById('evaluationPurpose').value,budget:document.getElementById('budget').value,currentStack:document.getElementById('currentStack').value.trim(),additionalContext:document.getElementById('additionalContext').value.trim(),accessCode:ACCESS_CODE};
+      var modeEl=document.querySelector('input[name="evalMode"]:checked');
+      var mode=modeEl?modeEl.value:'deep';
+      var btn=document.getElementById('btnEvaluate');
+      btn.disabled=true;
+      var payload={toolName:tn,toolUrl:urlVal,role:document.getElementById('role').value,technicalComfort:document.getElementById('technicalComfort').value,evaluationPurpose:document.getElementById('evaluationPurpose').value,budget:document.getElementById('budget').value,currentStack:document.getElementById('currentStack').value.trim(),additionalContext:document.getElementById('additionalContext').value.trim(),accessCode:ACCESS_CODE,mode:mode};
       showLoading();
-      try{var res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok){var err=await res.json();throw new Error(err.error||'Request failed');}var data=await res.json();renderResults(data);}catch(err){showError(err.message||'Evaluation failed. Please try again.');}
+      try{var res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok){var err=await res.json();throw new Error(err.error||'Request failed');}var data=await res.json();renderResults(data);}catch(err){showError(err.message||'Evaluation failed. Please try again.');}finally{btn.disabled=false;}
     }
     document.querySelectorAll('.form-card input').forEach(function(el){el.addEventListener('keydown',function(ev){if(ev.key==='Enter')runEvaluation();});});
   </script>
