@@ -13,7 +13,7 @@ const QUICK_FRAMEWORK = `You are an AI tool evaluator. Produce a CONCISE evaluat
 ## Scoring
 Score each 1-5 with a SHORT rationale (under 15 words):
 Core Capability, Production Readiness, Pricing & Value, API & Integration, Reliability & Scale, Data Privacy, Differentiation, Docs & Support.
-Overall score = average rounded to nearest 0.5. Add a one-line calibration note.
+Overall score = CALCULATE by adding all 8 scores and dividing by 8, then round to the nearest 0.5. Show your math in the calibration_note. Example: if scores are 5+4+5+3+4+4+5+4=34, then 34/8=4.25, rounded to 4.5. Do not estimate — compute it.
 
 ## Source Rules
 - Use official sites, reputable publications, and review platforms for scores and facts.
@@ -40,7 +40,7 @@ const DEEP_FRAMEWORK = `You are an AI tool evaluator. Produce a THOROUGH evaluat
 ## Scoring Rubric
 Score each dimension 1-5 with a one-line rationale:
 Core Capability, Production Readiness, Pricing & Value, API & Integration Quality, Reliability & Scale, Data Privacy & Security, Differentiation, Documentation & Support.
-Overall score = average rounded to nearest 0.5 with calibration note.
+Overall score = CALCULATE by adding all 8 scores and dividing by 8, then round to the nearest 0.5. Show your math in the calibration_note field. Example: if scores are 5+4+5+3+4+4+5+4=34, then 34/8=4.25, rounded to 4.5. Do not estimate — compute it.
 
 ## Calibration Rules
 - Non-technical user: weight Ease of Onboarding and Production Readiness higher.
