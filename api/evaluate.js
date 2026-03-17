@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+const { GoogleGenAI } = require("@google/genai");
 
 const QUICK_FRAMEWORK = `You are an AI tool evaluator. Produce a CONCISE evaluation brief. Keep each text field to 2-3 sentences max. Be direct and skip preamble.
 
