@@ -3,6 +3,6 @@
   "version": "0.3.0",
   "private": true,
   "dependencies": {
-    "@google/genai": "^1.45.0"
-  }
+  "@google/generative-ai": "^0.x.x" 
+}
 }
