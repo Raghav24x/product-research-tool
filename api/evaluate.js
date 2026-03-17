@@ -1,5 +1,3 @@
-const { GoogleGenAI } = require("@google/genai");
-
 const QUICK_FRAMEWORK = `You are an AI tool evaluator. Produce a CONCISE evaluation brief. Keep each text field to 2-3 sentences max. Be direct and skip preamble.
 
 ## Evaluation Questions (answer briefly)
@@ -15,17 +13,14 @@ const QUICK_FRAMEWORK = `You are an AI tool evaluator. Produce a CONCISE evaluat
 ## Scoring
 Score each 1-5 with a SHORT rationale (under 15 words):
 Core Capability, Production Readiness, Pricing & Value, API & Integration, Reliability & Scale, Data Privacy, Differentiation, Docs & Support.
-
-Overall score = average rounded to nearest 0.5. Add a one-line calibration note for the user's context.
+Overall score = average rounded to nearest 0.5. Add a one-line calibration note.
 
 ## Source Rules
 - Use official sites, reputable publications, and review platforms for scores and facts.
-- Collect 2-3 useful community insights from Reddit/HN/Twitter into community_opinions, prefixed with source. Skip if nothing useful found.
+- Collect 2-3 useful community insights from Reddit/HN/Twitter into community_opinions, prefixed with source.
 
 ## Budget Rules
-- Budget = category-specific, not total spend.
-- Free tools with paid companions: don't penalize the tool, flag the companion cost.
-- Alternatives must respect stated budget.
+- Budget = category-specific, not total spend. Free tools with paid companions: don't penalize the tool, flag the companion cost. Alternatives must respect stated budget.
 
 ## Bottom Line
 Write 2-3 sentences: does this tool fit this user's requirements? Be specific to their context.`;
@@ -33,53 +28,40 @@ Write 2-3 sentences: does this tool fit this user's requirements? Be specific to
 const DEEP_FRAMEWORK = `You are an AI tool evaluator. Produce a THOROUGH evaluation brief calibrated to the user's specific context.
 
 ## Evaluation Framework
-For every tool evaluation, answer these questions:
-1. **What It Does** — Plain language, not marketing copy. What the tool actually does in one paragraph.
-2. **Who It's For** — Specific roles and use cases where this tool has a genuine edge. Be precise.
-3. **Practical Cost** — Real monthly/annual cost at realistic usage levels. Flag credit systems, overage traps, hidden costs. Don't just list sticker prices.
+1. **What It Does** — Plain language, not marketing copy. One paragraph.
+2. **Who It's For** — Specific roles and use cases where this tool has a genuine edge.
+3. **Practical Cost** — Real monthly/annual cost at realistic usage levels. Flag credit systems, overage traps, hidden costs.
 4. **Strengths** — What it's genuinely best at. Concrete capabilities, not vague praise.
-5. **Limitations** — Where it falls short. Be specific and honest. Cite known issues or architectural constraints.
-6. **Build vs Buy Signal** — Is the core capability genuinely hard to replicate? Or could you achieve 80% of the value with a simpler alternative?
-7. **Alternatives Worth Comparing** — The 2-3 most relevant alternatives, with one line on why each matters.
+5. **Limitations** — Where it falls short. Be specific and honest.
+6. **Build vs Buy Signal** — Is the core capability genuinely hard to replicate?
+7. **Alternatives Worth Comparing** — 2-3 most relevant alternatives with URLs.
 8. **Watch Out For** — Risks, gotchas, or failure modes the marketing copy won't mention.
 
 ## Scoring Rubric
 Score each dimension 1-5 with a one-line rationale:
-- Core Capability
-- Production Readiness
-- Pricing & Value
-- API & Integration Quality
-- Reliability & Scale
-- Data Privacy & Security
-- Differentiation
-- Documentation & Support
-
-Provide an Overall score (average, rounded to nearest 0.5) with a calibration note explaining how the score shifts based on the user's technical background.
+Core Capability, Production Readiness, Pricing & Value, API & Integration Quality, Reliability & Scale, Data Privacy & Security, Differentiation, Documentation & Support.
+Overall score = average rounded to nearest 0.5 with calibration note.
 
 ## Calibration Rules
-- If user is non-technical: weight Ease of Onboarding and Production Readiness higher.
-- If user is technical: weight Core Capability and API quality higher.
-- If user is budget-sensitive: weight Pricing & Value and free-tier usability higher.
-- If user is evaluating for a team: weight Documentation, Reliability, and enterprise trust higher.
-- Always name trade-offs explicitly. Never give a blanket recommendation.
+- Non-technical user: weight Ease of Onboarding and Production Readiness higher.
+- Technical user: weight Core Capability and API quality higher.
+- Budget-sensitive: weight Pricing & Value and free-tier usability higher.
+- Team adoption: weight Documentation, Reliability, and enterprise trust higher.
+- Always name trade-offs explicitly. Never give blanket recommendations.
 
 ## Budget Constraint Rules
-- The user's stated budget refers to what they can spend on tools IN THIS SPECIFIC CATEGORY, not their total software budget.
-- When scoring Pricing & Value, evaluate against the user's stated category budget only. Do not factor in companion tool costs when scoring — flag them under Watch Out For instead.
-- If the tool is free but requires a paid companion, do NOT penalize the tool's Pricing score. Flag the companion cost in Practical Cost and Watch Out For.
-- When recommending alternatives, ALWAYS respect the stated budget. If user said "Free only," note when alternatives exceed the budget.
+- Budget = category-specific, not total software budget.
+- Free tools with paid companions: don't penalize Pricing score, flag companion cost in Watch Out.
+- Alternatives must respect stated budget. Flag contradictions explicitly.
 
-## Source Quality Rules (two-tier)
-### Tier 1: Verified Sources (for scores and factual claims)
-Official product sites, documentation, pricing pages, changelogs, reputable tech publications (TechCrunch, The Verge, Ars Technica, MIT Tech Review, Wired, VentureBeat), aggregated review platforms (G2, Capterra, TrustRadius), peer-reviewed benchmarks.
-
-### Tier 2: Community Signals (collected separately)
-Reddit, HN, Twitter, blogs, forums. NEVER use for scores. Collect useful insights into community_opinions field, prefixed with source type. Only include genuine signal — skip generic praise or complaints.`;
+## Source Quality (two-tier)
+Tier 1 (for scores/facts): Official sites, reputable publications, G2/Capterra/TrustRadius.
+Tier 2 (community_opinions field only): Reddit, HN, Twitter, blogs. Never use for scores. Prefix each with source type.`;
 
 const OUTPUT_FORMAT = `
 
 ## Output Format
-Return your evaluation as valid JSON with this structure:
+Return ONLY valid JSON. No markdown fences, no preamble, no explanation outside the JSON.
 {
   "tool_name": "string",
   "tool_url": "string (official website URL)",
@@ -90,9 +72,9 @@ Return your evaluation as valid JSON with this structure:
   "strengths": ["string"],
   "limitations": ["string"],
   "build_vs_buy": "string",
-  "alternatives": [{"name": "string", "url": "string (official website URL)", "why": "string"}],
+  "alternatives": [{"name": "string", "url": "string", "why": "string"}],
   "watch_out_for": ["string"],
-  "community_opinions": ["string — each prefixed with [Reddit], [HN], [Twitter], [Blog] etc. Unverified public opinions."],
+  "community_opinions": ["string prefixed with [Reddit], [HN], [Twitter], [Blog] etc."],
   "scorecard": {
     "core_capability": {"score": number, "rationale": "string"},
     "production_readiness": {"score": number, "rationale": "string"},
@@ -106,11 +88,7 @@ Return your evaluation as valid JSON with this structure:
   "overall_score": number,
   "calibration_note": "string",
   "bottom_line": "string"
-}
-
-IMPORTANT: Always include tool_url and url for each alternative — use actual URLs found during research.
-
-Return ONLY valid JSON. No markdown fences, no preamble, no explanation outside the JSON.`;
+}`;
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -131,7 +109,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Tool name is required" });
   }
 
-  // Select framework based on mode
   const isQuick = mode === "quick";
   const framework = (isQuick ? QUICK_FRAMEWORK : DEEP_FRAMEWORK) + OUTPUT_FORMAT;
 
@@ -145,35 +122,67 @@ User context for calibration:
 - Monthly budget for this tool category (NOT total software budget): ${budget || "Not specified"}${additionalContext ? `\n- Additional context: ${additionalContext}` : ""}
 
 ${toolUrl ? `IMPORTANT: The user provided this URL: ${toolUrl}
-- ALWAYS visit and analyze this URL first. Extract product description, features, pricing, and relevant info directly from the page.
-- If the tool is not well-known and search returns limited results, the provided URL is your PRIMARY source. Build your evaluation primarily from the site itself.
-- Do NOT return "cannot find data" if a URL was provided.` : ''}
+- ALWAYS visit and analyze this URL first. Extract product description, features, pricing directly from the page.
+- If the tool is not well-known, the provided URL is your PRIMARY source.
+- Do NOT return "cannot find data" if a URL was provided.` : ""}
 
-Research this tool thoroughly before scoring. Look for:
-- Official website, pricing page, and documentation${toolUrl ? ' (start with the provided URL)' : ''}
-- Independent reviews and user feedback
-- Known limitations and competitor mentions
-- Community discussions on Reddit, HN, Twitter for the community_opinions field
+Research this tool thoroughly before scoring. Look for official website, pricing, documentation, independent reviews, community discussions.
+${isQuick ? "Keep your research focused. Prioritize official sources and skip deep community research." : ""}
+Calibrate your entire evaluation to this user's context.${additionalContext ? " Pay special attention to their additional context." : ""}`;
 
-If the tool is lesser-known and external coverage is sparse, flag limited external validation under Watch Out For and adjust scores accordingly.
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  if (!GEMINI_API_KEY) {
+    return res.status(500).json({ error: "API key not configured." });
+  }
 
-Calibrate your entire evaluation to this user's context.${additionalContext ? ` Pay special attention to the user's additional context.` : ""}`;
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+  const requestBody = {
+    system_instruction: {
+      parts: [{ text: framework }]
+    },
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: userMessage }]
+      }
+    ],
+    tools: [{ google_search: {} }],
+    generationConfig: {
+      maxOutputTokens: isQuick ? 3000 : 6000,
+      temperature: 0.3
+    }
+  };
 
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: userMessage,
-      config: {
-        systemInstruction: framework,
-        tools: [{ googleSearch: {} }],
-        maxOutputTokens: isQuick ? 3000 : 6000,
-      },
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody)
     });
 
-    const textContent = response.text || "";
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error("Gemini API error:", response.status, errBody);
+      return res.status(500).json({ error: "Evaluation failed. API returned status " + response.status });
+    }
 
+    const data = await response.json();
+
+    // Extract text from Gemini response
+    let textContent = "";
+    if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+      textContent = data.candidates[0].content.parts
+        .filter(p => p.text)
+        .map(p => p.text)
+        .join("");
+    }
+
+    if (!textContent) {
+      return res.status(200).json({ raw: true, content: "No evaluation generated. Please try again." });
+    }
+
+    // Parse JSON from response
     let evaluation;
     try {
       let cleaned = textContent.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
@@ -192,7 +201,7 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? ` 
     console.error("API Error:", error);
     return res.status(500).json({
       error: "Evaluation failed. Please try again.",
-      detail: error.message,
+      detail: error.message
     });
   }
 }
