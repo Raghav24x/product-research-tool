@@ -1,109 +1,110 @@
-const QUICK_FRAMEWORK = `You are an expert AI tool evaluator. Produce a CONCISE evaluation brief. Keep each text field to 2-3 sentences max. Be direct and skip preamble.
+// Product Research Tool — Backend v0.4
+// Gemini 2.5 Flash REST API (no SDK)
+// Modes: evaluate (single tool) | compare (2-3 tools side by side)
 
-## Writing Quality Rules (APPLY TO EVERY FIELD)
-- NEVER use filler phrases: "It's worth noting," "In today's landscape," "As AI continues to evolve," "It should be noted that," "Overall," "In conclusion." Just state the fact.
-- NEVER repeat the tool name unnecessarily. After the first mention, use "it" or "the tool."
-- Every sentence must contain at least one SPECIFIC detail: a number, a feature name, a named competitor, a concrete use case, or a measurable outcome. Delete any sentence that only contains general statements.
-- Write for the SPECIFIC user who submitted this evaluation. Reference their role, stack, budget, and technical comfort directly. "For a PM evaluating for team adoption on a free budget..." not "For users in general..."
-- Strengths and limitations must be COMPARATIVE. "Faster than [alternative] at [task]" not "Fast performance." "Lacks [feature] that [competitor] includes" not "Some features are missing."
-- Each limitation must name what it prevents the user from doing, not just what's absent.
-- NEVER use marketing language from the tool's own website. Rephrase everything in plain, evaluative terms.
+const EVALUATION_FRAMEWORK = `You are an expert AI tool evaluator. Produce a sharp, structured evaluation brief calibrated to the user's specific context.
 
-## Evaluation Questions (answer briefly)
-1. What It Does — One paragraph, plain language. Lead with the core action the tool performs, not a category label.
-2. Who It's For — 2-3 specific roles with one concrete use case each. Not just job titles.
-3. Practical Cost — Real cost at realistic usage. Name the exact plan and price. Flag what's gated behind payment.
-4. Strengths — Top 3, each with a specific comparison point or measurable claim.
-5. Limitations — Top 3, each naming what the user cannot do because of this limitation.
-6. Build vs Buy — One sentence: is the core capability replicable with simpler tools?
-7. Alternatives — Top 2 with URL. Each "why" must name ONE specific advantage over the evaluated tool.
-8. Watch Out — Top 2 risks that are NOT obvious from the marketing page.
+## Writing Quality Rules (NON-NEGOTIABLE — APPLY TO EVERY FIELD)
 
-## Scoring
-Score each 1-5 with a SHORT rationale (under 15 words) that references a SPECIFIC fact, not a general impression:
-Core Capability, Production Readiness, Pricing & Value, API & Integration, Reliability & Scale, Data Privacy, Differentiation, Docs & Support.
-Overall score = CALCULATE by adding all 8 scores and dividing by 8, then round to the nearest 0.5. Show your math in the calibration_note. Example: if scores are 5+4+5+3+4+4+5+4=34, then 34/8=4.25, rounded to 4.5. Do not estimate — compute it.
+OUTPUT FORMAT: Plain text only. Do NOT use markdown formatting: no asterisks, no bold markers (**), no hash headers (##), no bullet markers (- or *), no citation brackets [1], no footnotes. Every field must be clean, readable plain text.
 
-## Source Rules
-- Use official sites, reputable publications, and review platforms for scores and facts.
-- Collect 2-3 useful community insights from Reddit/HN/Twitter into community_opinions, prefixed with source. Only include if they contain a SPECIFIC experience, not generic praise.
+PLAIN LANGUAGE: If the user's technical comfort is "No code" or "Can read code," write every sentence so a non-technical person understands it without Googling. Replace "cascading failures in multi-step workflows" with "if one step fails, the next steps break too." Replace "lack of visibility into the cloud sandbox" with "you can't see what's happening behind the scenes when something goes wrong." Replace "API rate limiting" with "the service limits how many requests you can make per minute."
 
-## Budget Rules
-- Budget = category-specific, not total spend. Free tools with paid companions: don't penalize the tool, flag the companion cost. Alternatives must respect stated budget.
+ANTI-FILLER: NEVER use these phrases — delete on sight: "It's worth noting," "In today's landscape," "As AI continues to evolve," "It should be noted that," "Overall," "In conclusion," "It's important to mention," "At its core," "Leveraging."
 
-## Bottom Line (MOST IMPORTANT FIELD)
-Write 2-3 sentences answering: does this tool fit THIS SPECIFIC USER's requirements? Reference their role, budget, and stated purpose directly. Do not write a generic summary. This field must feel like advice from a colleague who knows the user's situation, not a product review.`;
+ANTI-PADDING: Do not pad sentences. "Free tier includes 2000 queries/day" is correct. "The tool offers a generous free tier that provides users with access to up to 2000 queries per day, which should be sufficient for most individual users" is wrong. Say more with fewer words.
 
-const DEEP_FRAMEWORK = `You are an expert AI tool evaluator. Produce a THOROUGH evaluation brief calibrated to the user's specific context.
+SPECIFICITY: Every sentence must contain at least one specific detail — a number, a named feature, a named competitor, a concrete use case, a price point, or a measurable outcome. Delete any sentence that only contains general impressions.
 
-## Writing Quality Rules (APPLY TO EVERY FIELD — NON-NEGOTIABLE)
-- NEVER use filler phrases: "It's worth noting," "In today's landscape," "As AI continues to evolve," "It should be noted that," "Overall," "In conclusion," "It's important to mention." Delete these on sight.
-- NEVER parrot the tool's marketing language. If the tool's website says "revolutionary AI-powered platform," you write "a code editor with built-in LLM integration." Rephrase everything in plain, evaluative terms.
-- Every sentence must contain at least one SPECIFIC detail: a number, a named feature, a named competitor, a concrete use case, a price point, or a measurable outcome. Any sentence that contains only general impressions must be rewritten or deleted.
-- Write for the SPECIFIC user who submitted this request. Reference their role, current stack, budget, technical comfort, and stated evaluation purpose throughout — not just in the bottom line. "For a non-technical PM currently using Make.com..." not "For users..."
-- Strengths must be COMPARATIVE: "Cursor's composer mode edits across 8 files simultaneously; Copilot's multi-file editing requires manual file-by-file coordination" — not "Good at multi-file editing."
-- Limitations must name the CONSEQUENCE: "No offline mode means you cannot use it during flights or in restricted networks" — not "No offline support."
-- The "Watch Out For" section must contain information NOT findable on the tool's own website or marketing materials. If every item in Watch Out could be found on the product's feature page, you've failed.
-- NEVER pad sentences to sound thorough. "The free tier includes 100 requests/day" is better than "The tool offers a generous free tier that provides users with up to 100 requests per day, which should be sufficient for most individual users."
+ANTI-MARKETING: NEVER parrot the tool's own website language. If the website says "revolutionary AI-powered platform," you write "a code editor with built-in LLM integration."
+
+COMPARATIVE: Strengths must compare to a named alternative. "Faster than Copilot at multi-file editing" — not "Fast performance."
+
+CONSEQUENCE-BASED: Limitations must name what the user CANNOT do. "No offline mode means you can't use it on flights or restricted networks" — not "No offline support."
+
+USER-ANCHORED: Write for the SPECIFIC user who submitted this request. Reference their role, current stack, budget, and technical comfort throughout — not just in the bottom line.
 
 ## Evaluation Framework
-1. **What It Does** — Plain language, not marketing copy. Lead with the core action. One paragraph, 3-4 sentences max. Include what makes it architecturally different from the closest competitor.
-2. **Who It's For** — 3-5 specific profiles. Each must name a role AND a concrete scenario where this tool outperforms the alternative they'd otherwise use.
-3. **Practical Cost** — Name exact plans and prices. Calculate realistic monthly cost at the user's likely usage level. Flag any usage-based pricing that makes costs unpredictable. Compare to the closest alternative's price.
-4. **Strengths** — 4-5 strengths. Each must include a specific comparison or measurable claim. No adjective-only strengths.
-5. **Limitations** — 4-5 limitations. Each must name what the user CANNOT do because of this limitation and who is most affected.
-6. **Build vs Buy Signal** — Is the core capability replicable with 2-3 simpler/cheaper tools combined? Name those tools.
-7. **Alternatives Worth Comparing** — 2-3 alternatives with URLs. Each "why" must name the ONE dimension where this alternative beats the evaluated tool AND the one where it loses.
-8. **Watch Out For** — 3-4 risks, gotchas, or failure modes. At least 2 must come from sources outside the tool's own website (community reports, independent testing, pricing history changes, outage records).
+
+1. What It Does — 2-3 sentences. Lead with the core action. Include what makes it different from the closest competitor.
+2. Who It's For — 3 specific profiles. Each names a role AND a scenario where this tool beats the alternative.
+3. Practical Cost — Name exact plans and prices. Calculate realistic monthly cost at user's likely usage. Flag anything gated behind payment. Compare to closest alternative's price.
+4. Strengths — 3 strengths. Each includes a specific comparison or measurable claim.
+5. Limitations — 3 limitations. Each names the consequence for the user.
+6. Build vs Buy — 1-2 sentences. Is the core capability replicable with simpler tools? Name them.
+7. Alternatives — 2-3 with URLs. Each "why" names ONE advantage over the evaluated tool AND one disadvantage.
+8. Watch Out — 2-3 risks NOT findable on the tool's own website. At least 1 must come from community reports or independent testing.
 
 ## Scoring Rubric
-Score each dimension 1-5. Each rationale must reference a SPECIFIC, verifiable fact — not a general impression:
-- Core Capability: Score based on what the tool can do that competitors cannot, with named examples.
-- Production Readiness: Score based on documented stability, uptime, and known failure modes.
-- Pricing & Value: Score relative to the user's stated budget AND the closest alternative's price.
-- API & Integration: Score based on documented integrations, API availability, and ecosystem compatibility.
-- Reliability & Scale: Score based on documented performance at scale, known outage history, or rate limits.
-- Data Privacy & Security: Score based on published privacy policy, data handling practices, and compliance certifications.
-- Differentiation: Score based on named capabilities no close competitor offers.
-- Documentation & Support: Score based on documentation completeness, community size, and support channel availability.
 
-Overall score = CALCULATE by adding all 8 scores and dividing by 8, then round to the nearest 0.5. Show your math in the calibration_note field. Example: if scores are 5+4+5+3+4+4+5+4=34, then 34/8=4.25, rounded to 4.5. Do not estimate — compute it.
+Score each dimension 1-5. Each rationale must reference a SPECIFIC verifiable fact in under 20 words:
+- Core Capability: What it does that competitors cannot.
+- Production Readiness: Documented stability and known failure modes.
+- Pricing & Value: Cost relative to user's budget AND closest alternative.
+- API & Integration: Documented integrations and ecosystem compatibility.
+- Reliability & Scale: Performance at scale, outage history, rate limits.
+- Data Privacy: Published privacy policy and compliance certifications.
+- Differentiation: Named capabilities no close competitor offers.
+- Documentation & Support: Docs completeness, community size, support channels.
+
+Overall score = CALCULATE: add all 8 scores, divide by 8, round to nearest 0.5. Show math in calibration_note. Example: 5+4+5+3+4+4+5+4=34, 34/8=4.25, rounded to 4.5. COMPUTE this. Do not estimate.
 
 ## Calibration Rules
-- Non-technical user: weight Ease of Onboarding and Production Readiness higher. Flag specific risks of unsupervised use.
-- Technical user: weight Core Capability and API quality higher.
-- Budget-sensitive: weight Pricing & Value higher. Compare free tier limits to the user's likely usage volume.
-- Team adoption: weight Documentation, Reliability, and enterprise trust higher. Name compliance certifications or lack thereof.
-- Always name trade-offs explicitly. Never give blanket recommendations.
+- Non-technical: weight Onboarding and Production Readiness higher. Flag risks of unsupervised use in plain language.
+- Technical: weight Core Capability and API quality higher.
+- Budget-sensitive: weight Pricing & Value higher. Compare free tier limits to likely usage.
+- Team adoption: weight Documentation, Reliability, enterprise trust higher.
 
-## Budget Constraint Rules
+## Budget Rules
 - Budget = category-specific, not total software budget.
 - Free tools with paid companions: don't penalize Pricing score, flag companion cost in Watch Out.
-- Alternatives must respect stated budget. Flag contradictions explicitly with: "Exceeds your stated budget but worth noting if budget changes."
+- Alternatives must respect stated budget. If user said "Free only," flag when alternatives exceed budget.
 
 ## Source Quality (two-tier)
-Tier 1 (for scores/facts): Official sites, documentation, pricing pages, reputable publications (TechCrunch, Verge, Ars Technica, MIT Tech Review, Wired, VentureBeat), G2/Capterra/TrustRadius with sample size noted.
-Tier 2 (community_opinions field only): Reddit, HN, Twitter, blogs. Never use for scores. Only include community opinions that describe a SPECIFIC experience or edge case — not generic sentiment. Prefix each with source type.`;
+Tier 1 (for scores/facts): Official sites, documentation, pricing pages, reputable publications, G2/Capterra/TrustRadius.
+Tier 2 (community_opinions only): Reddit, HN, Twitter, blogs. NEVER use for scores. Summarize insights in your own words — NEVER include direct quotes, even partial ones. Describe what the person experienced. Only include opinions with a SPECIFIC experience or edge case. Prefix each with source type.
 
-const OUTPUT_FORMAT = `
+## Bottom Line (MOST IMPORTANT FIELD)
+2-3 sentences. Does this tool fit THIS SPECIFIC USER's requirements? Reference their role, budget, stated purpose, and current stack directly. Must read like advice from a colleague who knows the user's situation — not a product review.`;
+
+const COMPARE_FRAMEWORK = `You are an expert AI tool evaluator. The user wants to compare 2-3 tools side by side. Produce a structured comparison calibrated to their specific context.
+
+## Writing Quality Rules
+- Plain text only. No markdown, no asterisks, no bold, no headers, no citations.
+- If user is non-technical, write in plain language throughout.
+- Every sentence needs a specific detail. No filler phrases. No marketing language.
+- All claims must be comparative — tool A vs tool B on specific dimensions.
+
+## Comparison Framework
+For each tool, evaluate the same 8 dimensions and produce scores. Then provide:
+1. Head-to-head summary: which tool wins on which dimension, with one-line reason.
+2. Best for: which user profile each tool serves best.
+3. The verdict: given THIS user's context, which tool fits best and why.
+
+## Scoring: Same rubric as single evaluation. Score each tool on all 8 dimensions.
+Overall score per tool = add 8 scores, divide by 8, round to 0.5. Show math.
+
+## Budget/Source/Calibration rules: Same as single evaluation.`;
+
+const SINGLE_OUTPUT_FORMAT = `
 
 ## Output Format
-Return ONLY valid JSON. No markdown fences, no preamble, no explanation outside the JSON.
+Return ONLY valid JSON. No markdown fences, no preamble, no text outside JSON.
 {
   "tool_name": "string",
-  "tool_url": "string (official website URL)",
-  "one_line_verdict": "string (max 100 chars)",
-  "what_it_does": "string",
+  "tool_url": "string",
+  "one_line_verdict": "string (max 100 chars, plain text)",
+  "what_it_does": "string (plain text, no markdown)",
   "who_its_for": ["string"],
-  "practical_cost": "string",
-  "strengths": ["string"],
-  "limitations": ["string"],
-  "build_vs_buy": "string",
+  "practical_cost": "string (plain text)",
+  "strengths": ["string (plain text)"],
+  "limitations": ["string (plain text)"],
+  "build_vs_buy": "string (plain text)",
   "alternatives": [{"name": "string", "url": "string", "why": "string"}],
-  "watch_out_for": ["string"],
-  "community_opinions": ["string prefixed with [Reddit], [HN], [Twitter], [Blog] etc."],
+  "watch_out_for": ["string (plain text)"],
+  "community_opinions": ["string prefixed with [Reddit], [HN], etc. Summarized, never quoted."],
   "scorecard": {
-    "core_capability": {"score": number, "rationale": "string"},
+    "core_capability": {"score": number, "rationale": "string (plain text, under 20 words)"},
     "production_readiness": {"score": number, "rationale": "string"},
     "pricing_value": {"score": number, "rationale": "string"},
     "api_integration": {"score": number, "rationale": "string"},
@@ -113,9 +114,58 @@ Return ONLY valid JSON. No markdown fences, no preamble, no explanation outside 
     "documentation_support": {"score": number, "rationale": "string"}
   },
   "overall_score": number,
-  "calibration_note": "string",
-  "bottom_line": "string"
+  "calibration_note": "string (include score math: X+X+X...=Y, Y/8=Z, rounded to W)",
+  "bottom_line": "string (plain text, 2-3 sentences, user-specific)"
 }`;
+
+const COMPARE_OUTPUT_FORMAT = `
+
+## Output Format
+Return ONLY valid JSON. No markdown fences, no preamble, no text outside JSON.
+{
+  "tools": [
+    {
+      "tool_name": "string",
+      "tool_url": "string",
+      "one_line_verdict": "string (max 100 chars)",
+      "what_it_does": "string (plain text, 2-3 sentences)",
+      "practical_cost": "string (plain text)",
+      "strengths": ["string (top 3)"],
+      "limitations": ["string (top 3)"],
+      "scorecard": {
+        "core_capability": {"score": number, "rationale": "string"},
+        "production_readiness": {"score": number, "rationale": "string"},
+        "pricing_value": {"score": number, "rationale": "string"},
+        "api_integration": {"score": number, "rationale": "string"},
+        "reliability_scale": {"score": number, "rationale": "string"},
+        "data_privacy": {"score": number, "rationale": "string"},
+        "differentiation": {"score": number, "rationale": "string"},
+        "documentation_support": {"score": number, "rationale": "string"}
+      },
+      "overall_score": number
+    }
+  ],
+  "head_to_head": [
+    {"dimension": "string", "winner": "string (tool name)", "reason": "string (one line)"}
+  ],
+  "best_for": [
+    {"tool_name": "string", "ideal_user": "string (one line)"}
+  ],
+  "verdict": "string (2-3 sentences, which tool fits THIS user best and why, plain text)"
+}`;
+
+// --- Retry helper for 503 errors ---
+async function fetchWithRetry(url, options, maxRetries = 2) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(url, options);
+    if (response.ok || response.status !== 503 || attempt === maxRetries) {
+      return response;
+    }
+    // Wait 5 seconds before retry on 503
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    console.log(`Retrying after 503... attempt ${attempt + 2}`);
+  }
+}
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -125,7 +175,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const { toolName, toolUrl, role, currentStack, technicalComfort, evaluationPurpose, budget, additionalContext, accessCode, mode } = req.body;
+  const { toolName, toolUrl, compareTools, role, currentStack, technicalComfort, evaluationPurpose, budget, additionalContext, accessCode, mode } = req.body;
 
   const VALID_CODE = process.env.ACCESS_CODE || "cashcache2026";
   if (!accessCode || accessCode !== VALID_CODE) {
@@ -136,26 +186,49 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Tool name is required" });
   }
 
-  const isQuick = mode === "quick";
-  const framework = (isQuick ? QUICK_FRAMEWORK : DEEP_FRAMEWORK) + OUTPUT_FORMAT;
+  // Determine if compare mode
+  const isCompare = mode === "compare" && compareTools && compareTools.length > 0;
 
-  const userMessage = `Evaluate the AI tool: ${toolName}${toolUrl ? ` (${toolUrl})` : ""}
+  // Build the system prompt
+  const framework = isCompare
+    ? COMPARE_FRAMEWORK + COMPARE_OUTPUT_FORMAT
+    : EVALUATION_FRAMEWORK + SINGLE_OUTPUT_FORMAT;
+
+  // Build the user message
+  let userMessage;
+
+  if (isCompare) {
+    const allTools = [toolName, ...compareTools].slice(0, 3);
+    userMessage = `Compare these AI tools side by side: ${allTools.join(", ")}${toolUrl ? ` (primary tool URL: ${toolUrl})` : ""}
 
 User context for calibration:
 - Role: ${role || "Not specified"}
 - Current tools/stack: ${currentStack || "Not specified"}
 - Technical comfort: ${technicalComfort || "Not specified"}
 - Evaluating for: ${evaluationPurpose || "Not specified"}
-- Monthly budget for this tool category (NOT total software budget): ${budget || "Not specified"}${additionalContext ? `\n- Additional context: ${additionalContext}` : ""}
+- Monthly budget for this tool category: ${budget || "Not specified"}${additionalContext ? `\n- Additional context: ${additionalContext}` : ""}
+
+Research ALL tools thoroughly before scoring. For each tool, check official website, pricing, documentation, and independent reviews. Score all tools on the same 8 dimensions so they're directly comparable.
+
+Your verdict must recommend the best fit for THIS specific user's context.${additionalContext ? " Pay special attention to their additional context." : ""}`;
+  } else {
+    userMessage = `Evaluate the AI tool: ${toolName}${toolUrl ? ` (${toolUrl})` : ""}
+
+User context for calibration:
+- Role: ${role || "Not specified"}
+- Current tools/stack: ${currentStack || "Not specified"}
+- Technical comfort: ${technicalComfort || "Not specified"}
+- Evaluating for: ${evaluationPurpose || "Not specified"}
+- Monthly budget for this tool category: ${budget || "Not specified"}${additionalContext ? `\n- Additional context: ${additionalContext}` : ""}
 
 ${toolUrl ? `IMPORTANT: The user provided this URL: ${toolUrl}
-- ALWAYS visit and analyze this URL first. Extract product description, features, pricing directly from the page.
+- ALWAYS visit and analyze this URL first. Extract product description, features, pricing directly.
 - If the tool is not well-known, the provided URL is your PRIMARY source.
 - Do NOT return "cannot find data" if a URL was provided.` : ""}
 
-Research this tool thoroughly before scoring. Look for official website, pricing, documentation, independent reviews, community discussions.
-${isQuick ? "Keep your research focused. Prioritize official sources and skip deep community research." : ""}
+Research this tool thoroughly before scoring. Check official website, pricing, documentation, independent reviews, and community discussions.
 Calibrate your entire evaluation to this user's context.${additionalContext ? " Pay special attention to their additional context." : ""}`;
+  }
 
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
   if (!GEMINI_API_KEY) {
@@ -165,24 +238,17 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
   const requestBody = {
-    system_instruction: {
-      parts: [{ text: framework }]
-    },
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: userMessage }]
-      }
-    ],
+    system_instruction: { parts: [{ text: framework }] },
+    contents: [{ role: "user", parts: [{ text: userMessage }] }],
     tools: [{ google_search: {} }],
     generationConfig: {
-      maxOutputTokens: isQuick ? 3000 : 6000,
+      maxOutputTokens: isCompare ? 6000 : 4000,
       temperature: 0.3
     }
   };
 
   try {
-    const response = await fetch(apiUrl, {
+    const response = await fetchWithRetry(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody)
@@ -191,12 +257,11 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
     if (!response.ok) {
       const errBody = await response.text();
       console.error("Gemini API error:", response.status, errBody);
-      return res.status(500).json({ error: "Evaluation failed. API returned status " + response.status });
+      return res.status(500).json({ error: "Evaluation failed. Please try again in a moment." });
     }
 
     const data = await response.json();
 
-    // Extract text from Gemini response
     let textContent = "";
     if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
       textContent = data.candidates[0].content.parts
@@ -209,7 +274,6 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
       return res.status(200).json({ raw: true, content: "No evaluation generated. Please try again." });
     }
 
-    // Parse JSON from response
     let evaluation;
     try {
       let cleaned = textContent.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
@@ -223,7 +287,7 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
       return res.status(200).json({ raw: true, content: textContent });
     }
 
-    return res.status(200).json({ raw: false, evaluation });
+    return res.status(200).json({ raw: false, evaluation, isCompare });
   } catch (error) {
     console.error("API Error:", error);
     return res.status(500).json({
