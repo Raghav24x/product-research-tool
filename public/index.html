@@ -385,13 +385,37 @@
     function submitFeedback() {
       if (!_feedbackRating) return;
       var comment = document.getElementById('feedbackText').value.trim();
-      var payload = JSON.stringify({ timestamp: new Date().toISOString(), toolName: _lastToolName, rating: _feedbackRating, comment: comment });
-      // Post directly to Google Sheets (bypasses Vercel network restrictions)
+      var payload = { timestamp: new Date().toISOString(), toolName: _lastToolName, rating: _feedbackRating, comment: comment };
+      // Post to Google Sheets via Apps Script
       if (SHEET_URL) {
-        fetch(SHEET_URL, { method: 'POST', body: payload }).catch(function(){});
+        try {
+          var form = document.createElement('form');
+          form.method = 'POST';
+          form.action = SHEET_URL;
+          form.target = '_blank';
+          form.style.display = 'none';
+          // Use a hidden iframe instead of _blank to avoid opening a new tab
+          var iframe = document.getElementById('feedbackFrame');
+          if (!iframe) {
+            iframe = document.createElement('iframe');
+            iframe.id = 'feedbackFrame';
+            iframe.name = 'feedbackFrame';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+          }
+          form.target = 'feedbackFrame';
+          var input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'payload';
+          input.value = JSON.stringify(payload);
+          form.appendChild(input);
+          document.body.appendChild(form);
+          form.submit();
+          document.body.removeChild(form);
+        } catch(e) { console.error('Sheet feedback failed:', e); }
       }
-      // Also try backend as backup
-      fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(function(){});
+      // Backend backup
+      fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(function(){});
       document.getElementById('feedbackWidget').innerHTML = '<div class="feedback-thanks">Thanks — your feedback shapes the next version.</div>';
     }
 
