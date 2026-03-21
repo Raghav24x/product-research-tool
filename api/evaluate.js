@@ -37,15 +37,15 @@ USER-ANCHORED: Write for the SPECIFIC user who submitted this request. Reference
 
 ## Scoring Rubric
 
-Score each dimension 1-5. Each rationale must reference a SPECIFIC verifiable fact in under 20 words:
-- Core Capability: What it does that competitors cannot.
-- Production Readiness: Documented stability and known failure modes.
-- Pricing & Value: Cost relative to user's budget AND closest alternative.
-- API & Integration: Documented integrations and ecosystem compatibility.
-- Reliability & Scale: Performance at scale, outage history, rate limits.
-- Data Privacy: Published privacy policy and compliance certifications.
-- Differentiation: Named capabilities no close competitor offers.
-- Documentation & Support: Docs completeness, community size, support channels.
+Score each dimension 1-5. Each rationale should be 1-2 clear sentences that reference SPECIFIC verifiable facts — a named feature, a number, a comparison, or a documented limitation. Not a general impression, not a single adjective.
+- Core Capability: What it does that competitors cannot, with a named example.
+- Production Readiness: Documented stability, known failure modes, and maturity signals.
+- Pricing & Value: Cost relative to user's stated budget AND the closest alternative's price point.
+- API & Integration: Number of documented integrations, API availability, ecosystem fit with user's stack.
+- Reliability & Scale: Known uptime record, rate limits at current tier, documented outage history.
+- Data Privacy: Published privacy policy specifics, compliance certifications (SOC2, GDPR, HIPAA), data residency.
+- Differentiation: Named capabilities no close competitor offers, and whether those matter for this user.
+- Documentation & Support: Docs completeness, community size (GitHub stars, Discord members), support response channels.
 
 Overall score = CALCULATE: add all 8 scores, divide by 8, round to nearest 0.5. Show math in calibration_note. Example: 5+4+5+3+4+4+5+4=34, 34/8=4.25, rounded to 4.5. COMPUTE this. Do not estimate.
 
@@ -104,7 +104,7 @@ Return ONLY valid JSON. No markdown fences, no preamble, no text outside JSON.
   "watch_out_for": ["string (plain text)"],
   "community_opinions": ["string prefixed with [Reddit], [HN], etc. Summarized, never quoted."],
   "scorecard": {
-    "core_capability": {"score": number, "rationale": "string (plain text, under 20 words)"},
+    "core_capability": {"score": number, "rationale": "string (plain text, 1-2 sentences with specific facts)"},
     "production_readiness": {"score": number, "rationale": "string"},
     "pricing_value": {"score": number, "rationale": "string"},
     "api_integration": {"score": number, "rationale": "string"},
