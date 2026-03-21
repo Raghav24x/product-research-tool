@@ -153,11 +153,10 @@
     /* Feedback Widget */
     .feedback-widget { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 22px; margin-top: 16px; box-shadow: var(--shadow-sm); }
     .feedback-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
-    .feedback-buttons { display: flex; gap: 10px; margin-bottom: 10px; }
-    .feedback-btn { font-family: var(--font-body); font-size: 20px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 18px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
-    .feedback-btn:hover { border-color: var(--cyan); }
-    .feedback-btn.selected { border-color: var(--cyan); background: var(--cyan-light); }
-    [data-theme="dark"] .feedback-btn.selected { background: rgba(0,217,255,0.1); }
+    .feedback-stars { display: flex; gap: 4px; margin-bottom: 10px; }
+    .feedback-star { font-size: 26px; cursor: pointer; color: var(--border); transition: color 0.15s; line-height: 1; }
+    .feedback-star.active { color: var(--orange); }
+    .feedback-star:hover { color: var(--orange); }
     .feedback-comment { display: none; margin-top: 8px; }
     .feedback-comment.active { display: block; }
     .feedback-comment textarea { font-family: var(--font-body); font-size: 13px; width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-input); color: var(--text-primary); resize: none; outline: none; }
@@ -353,25 +352,44 @@
       document.getElementById('compareFields').classList.toggle('active', on);
       document.getElementById('btnEvaluate').textContent = on ? 'Compare Tools' : 'Evaluate Tool';
     }
+    /* --- Clean markdown from Gemini output --- */
+    function stripMd(s){if(typeof s!=='string')return s;return s.replace(/\*\*/g,'').replace(/\*/g,'').replace(/^#+\s*/gm,'').replace(/\[(\d+)\]/g,'').replace(/`/g,'').trim();}
+    function cleanEval(e){
+      if(!e)return e;
+      ['one_line_verdict','what_it_does','practical_cost','build_vs_buy','bottom_line','calibration_note'].forEach(function(k){if(e[k])e[k]=stripMd(e[k]);});
+      ['strengths','limitations','watch_out_for','who_its_for','community_opinions'].forEach(function(k){if(e[k])e[k]=e[k].map(stripMd);});
+      if(e.scorecard){for(var k in e.scorecard){if(e.scorecard[k].rationale)e.scorecard[k].rationale=stripMd(e.scorecard[k].rationale);}}
+      if(e.alternatives){e.alternatives.forEach(function(a){if(a.why)a.why=stripMd(a.why);});}
+      return e;
+    }
+
     function getScoreClass(s){if(s>=4)return'score-high';if(s>=3)return'score-mid';if(s>=2)return'score-low';return'score-poor';}
     function formatLabel(k){var m={core_capability:'Core Capability',production_readiness:'Production Readiness',pricing_value:'Pricing & Value',pricing_and_value:'Pricing & Value',api_integration:'API & Integration',api_and_integration:'API & Integration',reliability_scale:'Reliability & Scale',reliability_and_scale:'Reliability & Scale',data_privacy:'Data Privacy',data_privacy_and_security:'Data Privacy',differentiation:'Differentiation',documentation_support:'Docs & Support',documentation_and_support:'Docs & Support',docs_and_support:'Docs & Support','Core Capability':'Core Capability','Production Readiness':'Production Readiness','Pricing & Value':'Pricing & Value','API & Integration':'API & Integration','Reliability & Scale':'Reliability & Scale','Data Privacy':'Data Privacy','Data Privacy & Security':'Data Privacy','Differentiation':'Differentiation','Documentation & Support':'Docs & Support','Docs & Support':'Docs & Support'};return m[k]||k.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});}
     function showLoading(){document.getElementById('formCard').style.display='none';document.getElementById('discoverSection').style.display='none';document.getElementById('loading').classList.add('active');document.getElementById('results').classList.remove('active');document.getElementById('errorContainer').classList.remove('active');var isCompare=document.getElementById('compareToggle').checked;document.getElementById('loadingTime').textContent=isCompare?'Comparing tools typically takes 1-2 minutes. Gemini is researching live data.':'This typically takes about a minute. Gemini is researching live data.';var step=0;window._li=setInterval(function(){step=(step+1)%loadingSteps.length;document.getElementById('loadingStep').textContent=loadingSteps[step];},4000);}
     function hideLoading(){document.getElementById('loading').classList.remove('active');clearInterval(window._li);}
     function showError(msg){hideLoading();document.getElementById('errorText').textContent=msg;document.getElementById('errorContainer').classList.add('active');}
-    function resetForm(){document.getElementById('formCard').style.display='block';document.getElementById('discoverSection').style.display='block';document.getElementById('results').classList.remove('active');document.getElementById('errorContainer').classList.remove('active');document.getElementById('compareToggle').checked=false;document.getElementById('compareFields').classList.remove('active');document.getElementById('btnEvaluate').textContent='Evaluate Tool';document.getElementById('compareTool1').value='';document.getElementById('compareTool2').value='';document.getElementById('compareTool2Group').style.display='none';document.getElementById('addThirdTool').style.display='';_feedbackRating=null;hideLoading();}
+    function resetForm(){document.getElementById('formCard').style.display='block';document.getElementById('discoverSection').style.display='block';document.getElementById('results').classList.remove('active');document.getElementById('errorContainer').classList.remove('active');document.getElementById('compareToggle').checked=false;document.getElementById('compareFields').classList.remove('active');document.getElementById('btnEvaluate').textContent='Evaluate Tool';document.getElementById('compareTool1').value='';document.getElementById('compareTool2').value='';document.getElementById('compareTool2Group').style.display='none';document.getElementById('addThirdTool').style.display='';_feedbackRating=0;hideLoading();}
 
     var _lastToolName = '';
-    var _feedbackRating = null;
-    function selectFeedback(rating, el) {
-      _feedbackRating = rating;
-      document.querySelectorAll('.feedback-btn').forEach(function(b) { b.classList.remove('selected'); });
-      el.classList.add('selected');
+    var _feedbackRating = 0;
+    var SHEET_URL = 'https://script.google.com/macros/s/AKfycbw_mQuYDzRNqUn7vhidcAPNWaeEGyMRyyahZZvJV73rnRDHhDreNpcY60od2dm1ADY/exec'; // Set this after deployment — see instructions below
+    function selectStar(n) {
+      _feedbackRating = n;
+      for (var i = 1; i <= 5; i++) {
+        document.getElementById('star' + i).classList.toggle('active', i <= n);
+      }
       document.getElementById('feedbackComment').classList.add('active');
     }
     function submitFeedback() {
       if (!_feedbackRating) return;
       var comment = document.getElementById('feedbackText').value.trim();
-      fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rating: _feedbackRating, comment: comment, toolName: _lastToolName }) }).catch(function() {});
+      var payload = JSON.stringify({ timestamp: new Date().toISOString(), toolName: _lastToolName, rating: _feedbackRating, comment: comment });
+      // Post directly to Google Sheets (bypasses Vercel network restrictions)
+      if (SHEET_URL) {
+        fetch(SHEET_URL, { method: 'POST', body: payload }).catch(function(){});
+      }
+      // Also try backend as backup
+      fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(function(){});
       document.getElementById('feedbackWidget').innerHTML = '<div class="feedback-thanks">Thanks — your feedback shapes the next version.</div>';
     }
 
@@ -396,6 +414,10 @@
       hideLoading();
       var e = data.evaluation;
       if (!e.tools || !e.tools.length) { showError('Comparison failed. Please try again.'); return; }
+      e.tools.forEach(function(t){ cleanEval(t); });
+      if(e.verdict) e.verdict = stripMd(e.verdict);
+      if(e.head_to_head) e.head_to_head.forEach(function(h){ if(h.reason) h.reason=stripMd(h.reason); });
+      if(e.best_for) e.best_for.forEach(function(b){ if(b.ideal_user) b.ideal_user=stripMd(b.ideal_user); });
       var html = '';
       e.tools.forEach(function(t) {
         var nameHtml = t.tool_url ? '<a href="'+t.tool_url+'" target="_blank" style="color:var(--result-header-text);border-bottom:1px solid rgba(255,255,255,0.3);text-decoration:none;">'+t.tool_name+' &#8599;</a>' : t.tool_name;
@@ -420,7 +442,7 @@
         if (t.limitations) { html += '<div class="result-section"><div class="result-section-title">'+t.tool_name+' — Limitations</div><ul class="result-list limitations">'+t.limitations.map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul></div>'; }
       });
       html += '<div class="results-actions"><button class="btn-new-eval" onclick="resetForm()">New evaluation</button><button class="btn-pdf" onclick="downloadPDF()">&#128196; Download PDF</button></div>';
-      html += '<div class="feedback-widget" id="feedbackWidget"><div class="feedback-title">Was this comparison useful?</div><div class="feedback-buttons"><button class="feedback-btn" onclick="selectFeedback(\'up\',this)">&#128077;</button><button class="feedback-btn" onclick="selectFeedback(\'down\',this)">&#128078;</button></div><div class="feedback-comment" id="feedbackComment"><textarea id="feedbackText" rows="2" maxlength="300" placeholder="What would make it better?"></textarea><button class="feedback-submit" onclick="submitFeedback()">Submit</button></div></div>';
+      html += '<div class="feedback-widget" id="feedbackWidget"><div class="feedback-title">Rate this comparison</div><div class="feedback-stars"><span class="feedback-star" id="star1" onclick="selectStar(1)">&#9733;</span><span class="feedback-star" id="star2" onclick="selectStar(2)">&#9733;</span><span class="feedback-star" id="star3" onclick="selectStar(3)">&#9733;</span><span class="feedback-star" id="star4" onclick="selectStar(4)">&#9733;</span><span class="feedback-star" id="star5" onclick="selectStar(5)">&#9733;</span></div><div class="feedback-comment" id="feedbackComment"><textarea id="feedbackText" rows="2" maxlength="300" placeholder="What would make it better?"></textarea><button class="feedback-submit" onclick="submitFeedback()">Submit</button></div></div>';
       _lastToolName = e.tools.map(function(t){return t.tool_name;}).join(' vs ');
       document.getElementById('results').innerHTML = html;
       document.getElementById('results').classList.add('active');
@@ -434,6 +456,7 @@
         try{ var cleaned=data.content.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim(); var fb=cleaned.indexOf('{');var lb=cleaned.lastIndexOf('}'); if(fb!==-1&&lb!==-1&&lb>fb){cleaned=cleaned.substring(fb,lb+1);} var parsed=JSON.parse(cleaned); data={raw:false,evaluation:parsed}; }catch(e){ document.getElementById('results').innerHTML='<div class="result-section"><div class="result-section-title">Evaluation</div><div class="result-text">'+data.content.replace(/\n/g,'<br>')+'</div></div><button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button>'; document.getElementById('results').classList.add('active'); return; }
       }
       var e=data.evaluation;
+      cleanEval(e);
       _lastToolName = e.tool_name || '';
       var sc='<div class="score-legend"><div class="score-legend-item"><div class="score-legend-dot high"></div>4-5 Strong</div><div class="score-legend-item"><div class="score-legend-dot mid"></div>3 Adequate</div><div class="score-legend-item"><div class="score-legend-dot low"></div>2 Below avg</div><div class="score-legend-item"><div class="score-legend-dot poor"></div>1 Poor</div></div>';
       if(e.scorecard){for(var k in e.scorecard){var v=e.scorecard[k],pct=(v.score/5)*100,cls=getScoreClass(v.score);sc+='<div class="scorecard-row '+cls+'" onclick="this.classList.toggle(\'expanded\')" title="Click for detail"><div class="scorecard-label">'+formatLabel(k)+'</div><div class="scorecard-bar-bg"><div class="scorecard-bar-fill" style="width:'+pct+'%"></div></div><div class="scorecard-value">'+v.score+'</div></div><div class="scorecard-rationale">'+v.rationale+'</div>';}}
@@ -457,7 +480,7 @@
         '<div class="result-section" id="sec-cost"><div class="result-section-title">Practical cost</div><div class="result-text">'+(e.practical_cost||'')+'</div></div>'+
         ((e.community_opinions&&e.community_opinions.length)?'<div class="result-section" id="sec-community" style="border-left:3px solid var(--amber);"><div class="result-section-title">Community opinions *</div><div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;font-style:italic;">Unverified public opinions from forums and social media. Not confirmed by reputable publications. Use as signal, not as fact.</div><ul class="result-list limitations">'+(e.community_opinions).map(function(c){return'<li>'+c+'</li>';}).join('')+'</ul></div>':'')+
         '<div class="results-actions"><button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button><button class="btn-pdf" onclick="downloadPDF()">&#128196; Download PDF</button></div>'+
-        '<div class="feedback-widget" id="feedbackWidget"><div class="feedback-title">Was this evaluation useful?</div><div class="feedback-buttons"><button class="feedback-btn" onclick="selectFeedback(\'up\',this)">&#128077;</button><button class="feedback-btn" onclick="selectFeedback(\'down\',this)">&#128078;</button></div><div class="feedback-comment" id="feedbackComment"><textarea id="feedbackText" rows="2" maxlength="300" placeholder="What would make it better?"></textarea><button class="feedback-submit" onclick="submitFeedback()">Submit</button></div></div>';
+        '<div class="feedback-widget" id="feedbackWidget"><div class="feedback-title">Rate this evaluation</div><div class="feedback-stars"><span class="feedback-star" id="star1" onclick="selectStar(1)">&#9733;</span><span class="feedback-star" id="star2" onclick="selectStar(2)">&#9733;</span><span class="feedback-star" id="star3" onclick="selectStar(3)">&#9733;</span><span class="feedback-star" id="star4" onclick="selectStar(4)">&#9733;</span><span class="feedback-star" id="star5" onclick="selectStar(5)">&#9733;</span></div><div class="feedback-comment" id="feedbackComment"><textarea id="feedbackText" rows="2" maxlength="300" placeholder="What would make it better?"></textarea><button class="feedback-submit" onclick="submitFeedback()">Submit</button></div></div>';
       document.getElementById('results').classList.add('active');
       document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
     }
