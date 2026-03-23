@@ -396,15 +396,13 @@
     function submitFeedback() {
       if (!_feedbackRating) return;
       var comment = document.getElementById('feedbackText').value.trim();
-      // Send to Google Sheets via GET (most reliable cross-origin method)
+      // Send to Google Sheets via GET with no-cors
       if (SHEET_URL) {
         var params = '?timestamp=' + encodeURIComponent(new Date().toISOString())
           + '&toolName=' + encodeURIComponent(_lastToolName || 'unknown')
           + '&rating=' + encodeURIComponent(_feedbackRating)
           + '&comment=' + encodeURIComponent(comment || '');
-        // Image beacon — works everywhere, no CORS issues
-        var img = new Image();
-        img.src = SHEET_URL + params;
+        fetch(SHEET_URL + params, { method: 'GET', mode: 'no-cors' }).catch(function(){});
       }
       // Backend backup
       fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rating: _feedbackRating, comment: comment, toolName: _lastToolName }) }).catch(function(){});
