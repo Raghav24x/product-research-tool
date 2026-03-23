@@ -81,8 +81,14 @@ For each tool, evaluate the same 8 dimensions and produce scores. Then provide:
 2. Best for: which user profile each tool serves best.
 3. The verdict: given THIS user's context, which tool fits best and why.
 
-## Scoring: Same rubric as single evaluation. Score each tool on all 8 dimensions.
-Overall score per tool = add 8 scores, divide by 8, round to 0.5. Show math.
+## Scoring Rules (CRITICAL — READ CAREFULLY)
+- Each dimension score must be between 1 and 5. NEVER score above 5. NEVER score below 1.
+- The overall_score for each tool = CALCULATE by adding all 8 dimension scores, then dividing by 8, then rounding to the nearest 0.5.
+- Example: scores are 4+3+5+3+4+4+5+4 = 32. Then 32/8 = 4.0. So overall_score = 4.0
+- Example: scores are 5+4+5+4+4+5+5+4 = 36. Then 36/8 = 4.5. So overall_score = 4.5
+- The maximum possible overall_score is 5.0 (if all 8 dimensions score 5).
+- If your calculated overall_score exceeds 5.0, you have made an arithmetic error. Recalculate.
+- COMPUTE this mathematically. Do not estimate or guess.
 
 ## Budget/Source/Calibration rules: Same as single evaluation.`;
 
