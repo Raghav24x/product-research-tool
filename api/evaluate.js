@@ -47,7 +47,7 @@ Score each dimension 1-5. Each rationale should be 1-2 clear sentences that refe
 - Differentiation: Named capabilities no close competitor offers, and whether those matter for this user.
 - Documentation & Support: Docs completeness, community size (GitHub stars, Discord members), support response channels.
 
-Overall score = CALCULATE: add all 8 scores, divide by 8, round to nearest 0.5. Show math in calibration_note. Example: 5+4+5+3+4+4+5+4=34, 34/8=4.25, rounded to 4.5. COMPUTE this. Do not estimate.
+Overall score = CALCULATE: add all 8 scores, divide by 8, round to nearest 0.5. Example: 5+4+5+3+4+4+5+4=34, 34/8=4.25, rounded to 4.5. COMPUTE this. Do not estimate. The calibration_note field should explain how the user's context (role, technical comfort, budget) shifted the emphasis of the evaluation — NOT show the arithmetic.
 
 ## Calibration Rules
 - Non-technical: weight Onboarding and Production Readiness higher. Flag risks of unsupervised use in plain language.
@@ -114,8 +114,9 @@ Return ONLY valid JSON. No markdown fences, no preamble, no text outside JSON.
     "documentation_support": {"score": number, "rationale": "string"}
   },
   "overall_score": number,
-  "calibration_note": "string (include score math: X+X+X...=Y, Y/8=Z, rounded to W)",
-  "bottom_line": "string (plain text, 2-3 sentences, user-specific)"
+  "calibration_note": "string (how the user's context shifted evaluation emphasis — NOT arithmetic)",
+  "bottom_line": "string (plain text, 2-3 sentences, user-specific)",
+  "name_correction": "string or null — if the tool name appears misspelled or you had to interpret it, put the correct name here. Otherwise null."
 }`;
 
 const COMPARE_OUTPUT_FORMAT = `
@@ -201,6 +202,8 @@ export default async function handler(req, res) {
     const allTools = [toolName, ...compareTools].slice(0, 3);
     userMessage = `Compare these AI tools side by side: ${allTools.join(", ")}${toolUrl ? ` (primary tool URL: ${toolUrl})` : ""}
 
+CRITICAL: Evaluate the EXACT tools named above. Each tool name is precise and intentional. "Perplexity Computer" means the Computer feature specifically — NOT Perplexity AI in general. "Cursor" means Cursor the code editor — NOT cursor.so the domain registrar. If a name refers to a specific feature or version of a broader product, evaluate THAT feature, not the parent product.
+
 User context for calibration:
 - Role: ${role || "Not specified"}
 - Current tools/stack: ${currentStack || "Not specified"}
@@ -213,6 +216,8 @@ Research ALL tools thoroughly before scoring. For each tool, check official webs
 Your verdict must recommend the best fit for THIS specific user's context.${additionalContext ? " Pay special attention to their additional context." : ""}`;
   } else {
     userMessage = `Evaluate the AI tool: ${toolName}${toolUrl ? ` (${toolUrl})` : ""}
+
+CRITICAL: Evaluate the EXACT tool or feature named above. The name is precise and intentional. "Perplexity Computer" means the Computer feature specifically — NOT Perplexity AI in general. "Claude Code" means the CLI tool — NOT Claude the chatbot. If the name refers to a specific feature, product tier, or version of a broader product, evaluate THAT specific thing, not the parent product.
 
 User context for calibration:
 - Role: ${role || "Not specified"}
