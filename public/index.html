@@ -219,13 +219,22 @@
       .form-row { grid-template-columns: 1fr; }
       .header h1 { font-size: 22px; }
       .form-card { padding: 20px; }
-      .scorecard-label { width: 120px; font-size: 12px; }
-      .scorecard-rationale { padding-left: 132px; }
+      .scorecard-label { width: 100px; font-size: 11px; }
+      .scorecard-rationale { padding-left: 112px; font-size: 11px; }
+      .scorecard-value { width: 28px; font-size: 12px; }
+      .scorecard-bar-bg { height: 5px; }
       .result-header { flex-direction: column; gap: 8px; }
+      .result-header-card { padding: 18px 20px; }
+      .result-tool-name { font-size: 18px; }
+      .result-overall-score { font-size: 24px; }
+      .result-section { padding: 16px 18px; }
       .topbar { padding: 8px 16px; gap: 10px; flex-wrap: wrap; }
       .topbar-logo-text { font-size: 12px; }
       .topbar-right { margin-left: 0; }
-      .score-legend { gap: 10px; }
+      .score-legend { gap: 8px; }
+      .score-legend-item { font-size: 10px; }
+      .compare-table { font-size: 12px; }
+      .compare-table th, .compare-table td { padding: 6px 6px; }
     }
   </style>
 </head>
@@ -259,13 +268,13 @@
     <div class="form-card" id="formCard">
       <div class="form-section-label">Tool to evaluate</div>
       <div class="form-row">
-        <div class="form-group"><label for="toolName">Tool name *</label><input type="text" id="toolName" placeholder="e.g. Cursor, n8n, Lovable" required /></div>
+        <div class="form-group"><label for="toolName">Tool name *</label><input type="text" id="toolName" placeholder="e.g. Cursor, n8n, Lovable" required onblur="checkSpelling()" /><div id="spellSuggestion" style="display:none;font-size:12px;color:var(--text-muted);margin-top:4px;"></div></div>
         <div class="form-group"><label for="toolUrl">Website URL (optional)</label><input type="url" id="toolUrl" placeholder="https://..." /></div>
       </div>
       <div class="divider"></div>
       <div class="form-section-label">Your context</div>
       <div class="form-row">
-        <div class="form-group"><label for="role">Your role</label><select id="role" onchange="toggleOther(this,'roleOther')"><option value="">Select...</option><option value="Product Manager">Product Manager</option><option value="Founder / Solo Operator">Founder / Solo Operator</option><option value="Tech Lead / Engineering Manager">Tech Lead / Eng. Manager</option><option value="Data Analyst">Data Analyst</option><option value="Marketer / Content Creator">Marketer / Content Creator</option><option value="Developer">Developer</option><option value="Consultant / Advisor">Consultant / Advisor</option><option value="Other">Other</option></select><input type="text" id="roleOther" class="other-input" placeholder="Enter your role" style="display:none;margin-top:6px;" /></div>
+        <div class="form-group"><label for="role">Your role</label><select id="role" onchange="toggleOther(this,'roleOther')"><option value="">Select...</option><option value="Product Manager">Product Manager</option><option value="Founder / Solo Operator">Founder / Solo Operator</option><option value="Tech Lead / Engineering Manager">Tech Lead / Eng. Manager</option><option value="Data Analyst">Data Analyst</option><option value="Marketer / Content Creator">Marketer / Content Creator</option><option value="Developer">Developer</option><option value="Researcher">Researcher</option><option value="Consultant / Advisor">Consultant / Advisor</option><option value="Other">Other</option></select><input type="text" id="roleOther" class="other-input" placeholder="Enter your role" style="display:none;margin-top:6px;" /></div>
         <div class="form-group"><label for="technicalComfort">Technical comfort</label><select id="technicalComfort" onchange="toggleOther(this,'techOther')"><option value="">Select...</option><option value="No code — I use no-code tools only">No code — no-code tools only</option><option value="Can read code — I understand it but don't write it">Can read — understand but don't write</option><option value="Can write scripts — Python, SQL, or similar">Can script — Python, SQL, similar</option><option value="Full developer — I ship production code">Full developer — ship production code</option><option value="Other">Other</option></select><input type="text" id="techOther" class="other-input" placeholder="Describe your technical comfort" style="display:none;margin-top:6px;" /></div>
       </div>
       <div class="form-row">
@@ -422,18 +431,59 @@
     function downloadPDF() {
       var btn = document.querySelector('.btn-pdf'); var origText = btn.innerHTML; btn.innerHTML = '&#9203; Generating PDF...'; btn.disabled = true;
       var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (!isMobile) { window.print(); btn.innerHTML = origText; btn.disabled = false; return; }
+      var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      if (!isMobile) {
+        window.print(); btn.innerHTML = origText; btn.disabled = false; return;
+      }
+
+      // iOS Safari supports window.print() better than html2canvas
+      if (isIOS && /Safari/i.test(navigator.userAgent) && !/CriOS|Chrome/i.test(navigator.userAgent)) {
+        window.print(); btn.innerHTML = origText; btn.disabled = false; return;
+      }
+
+      // For iOS Chrome and Android: try html2canvas, fall back to share/copy
       function loadScript(src) { return new Promise(function(resolve, reject) { if (document.querySelector('script[src="'+src+'"]')) { resolve(); return; } var s = document.createElement('script'); s.src = src; s.onload = resolve; s.onerror = reject; document.head.appendChild(s); }); }
-      Promise.all([loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js')]).then(function() {
-        return html2canvas(document.getElementById('results'), { scale: 2, useCORS: true, backgroundColor: '#FAFBFC' });
+
+      Promise.all([
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js')
+      ]).then(function() {
+        return html2canvas(document.getElementById('results'), { scale: 1.5, useCORS: true, backgroundColor: '#FAFBFC', logging: false });
       }).then(function(canvas) {
-        var jsPDF = window.jspdf.jsPDF; var imgW = 210; var pageH = 297; var imgH = canvas.height * imgW / canvas.width; var pdf = new jsPDF('p', 'mm', 'a4'); var pos = 0; var left = imgH; var imgData = canvas.toDataURL('image/jpeg', 0.95);
+        var jsPDF = window.jspdf.jsPDF; var imgW = 210; var pageH = 297; var imgH = canvas.height * imgW / canvas.width;
+        var pdf = new jsPDF('p', 'mm', 'a4'); var pos = 0; var left = imgH;
+        var imgData = canvas.toDataURL('image/jpeg', 0.85);
         pdf.addImage(imgData, 'JPEG', 0, pos, imgW, imgH); left -= pageH;
         while (left > 0) { pos = left - imgH; pdf.addPage(); pdf.addImage(imgData, 'JPEG', 0, pos, imgW, imgH); left -= pageH; }
-        pdf.setFontSize(8); pdf.setTextColor(136, 146, 164); pdf.text('Product Research Tool — cashandcache.substack.com', 105, 290, { align: 'center' });
-        pdf.save((_lastToolName || 'evaluation').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase() + '-evaluation.pdf');
+        pdf.setFontSize(8); pdf.setTextColor(136, 146, 164);
+        pdf.text('Product Research Tool — cashandcache.substack.com', 105, 290, { align: 'center' });
+        // Use blob URL for better iOS Chrome support
+        var blob = pdf.output('blob');
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = (_lastToolName || 'evaluation').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase() + '-evaluation.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
         btn.innerHTML = origText; btn.disabled = false;
-      }).catch(function() { window.print(); btn.innerHTML = origText; btn.disabled = false; });
+      }).catch(function(err) {
+        console.error('PDF generation failed:', err);
+        // Fallback: try window.print as last resort
+        try { window.print(); } catch(e) {}
+        btn.innerHTML = origText; btn.disabled = false;
+        // If print also didn't work, tell the user
+        if (isIOS) {
+          btn.innerHTML = '&#128203; Copy text instead';
+          btn.onclick = function() {
+            var text = document.getElementById('results').innerText;
+            navigator.clipboard.writeText(text).then(function() { btn.innerHTML = '&#10003; Copied!'; setTimeout(function(){ btn.innerHTML = origText; btn.onclick = downloadPDF; }, 2000); });
+          };
+          btn.disabled = false;
+        }
+      });
     }
 
     function renderCompareResults(data) {
@@ -531,12 +581,17 @@
       var toolNameHtml = e.tool_url ? '<a href="'+e.tool_url+'" target="_blank">'+(e.tool_name||'Evaluation')+' &#8599;</a>' : (e.tool_name||'Evaluation');
       var tocItems=[{id:'sec-fit',label:'How It Fits'},{id:'sec-what',label:'What It Does'},{id:'sec-scorecard',label:'Scorecard'},{id:'sec-who',label:'Who It\'s For'},{id:'sec-strengths',label:'Strengths'},{id:'sec-limitations',label:'Limitations'},{id:'sec-watchout',label:'Watch Out'},{id:'sec-buildvbuy',label:'Build vs Buy'},{id:'sec-alternatives',label:'Alternatives'},{id:'sec-cost',label:'Cost'},{id:'sec-community',label:'Community*'}];
       var tocHtml='<div class="result-toc"><div class="result-toc-title">Jump to</div><div class="result-toc-list">'+tocItems.map(function(t){return'<a href="#'+t.id+'">'+t.label+'</a>';}).join('')+'</div></div>';
+      var correctionHtml = '';
+      if (e.name_correction && e.name_correction !== e.tool_name) {
+        correctionHtml = '<div style="background:var(--orange-light);border:1px solid rgba(255,140,66,0.3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;font-size:13px;color:var(--text-secondary);">Note: The tool name was interpreted as <strong style="color:var(--text-primary);">'+e.name_correction+'</strong>. If this isn\'t what you meant, try again with the exact name or provide the tool\'s URL.</div>';
+      }
       document.getElementById('results').innerHTML=
         '<div class="result-header-card"><div class="result-header"><div class="result-tool-name">'+toolNameHtml+'</div><div class="result-overall-score">'+(e.overall_score||'--')+'<span>/ 5</span></div></div>'+(e.one_line_verdict?'<div class="result-verdict">"'+e.one_line_verdict+'"</div>':'')+'</div>'+
         tocHtml+
+        correctionHtml+
         (e.bottom_line?'<div class="result-section" id="sec-fit"><div class="result-section-title">How it fits your requirements</div><div class="bottom-line">'+e.bottom_line+'</div></div>':'')+
         '<div class="result-section" id="sec-what"><div class="result-section-title">What it does</div><div class="result-text">'+(e.what_it_does||'')+'</div></div>'+
-        '<div class="result-section" id="sec-scorecard"><div class="result-section-title">Scorecard</div>'+sc+(e.calibration_note?'<div class="calibration-note">'+e.calibration_note+'</div>':'')+'</div>'+
+        '<div class="result-section" id="sec-scorecard"><div class="result-section-title">Scorecard</div>'+sc+'</div>'+
         '<div class="result-section" id="sec-who"><div class="result-section-title">Who it is for</div><ul class="result-list default">'+(e.who_its_for||[]).map(function(w){return'<li>'+w+'</li>';}).join('')+'</ul></div>'+
         '<div class="result-section" id="sec-strengths"><div class="result-section-title">Strengths</div><ul class="result-list strengths">'+(e.strengths||[]).map(function(s){return'<li>'+s+'</li>';}).join('')+'</ul></div>'+
         '<div class="result-section" id="sec-limitations"><div class="result-section-title">Limitations</div><ul class="result-list limitations">'+(e.limitations||[]).map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul></div>'+
@@ -549,6 +604,53 @@
         '<div class="feedback-widget" id="feedbackWidget"><div class="feedback-title">Rate this evaluation</div><div class="feedback-stars"><span class="feedback-star" id="star1" onclick="selectStar(1)">&#9733;</span><span class="feedback-star" id="star2" onclick="selectStar(2)">&#9733;</span><span class="feedback-star" id="star3" onclick="selectStar(3)">&#9733;</span><span class="feedback-star" id="star4" onclick="selectStar(4)">&#9733;</span><span class="feedback-star" id="star5" onclick="selectStar(5)">&#9733;</span></div><div class="feedback-comment" id="feedbackComment"><textarea id="feedbackText" rows="2" maxlength="300" placeholder="What would make it better?"></textarea><button class="feedback-submit" onclick="submitFeedback()">Submit</button></div></div>';
       document.getElementById('results').classList.add('active');
       document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+    }
+
+    /* --- Spell Check for Tool Names --- */
+    var knownTools = ['Cursor','Copilot','GitHub Copilot','Windsurf','Bolt.new','Replit','Perplexity','Perplexity AI','Perplexity Computer','NotebookLM','Notebook LM','ChatGPT','Claude','Gemini','Lovable','v0','Vercel','n8n','Make.com','Zapier','Notion','Notion AI','Figma','Canva','Midjourney','DALL-E','Stable Diffusion','Anthropic','OpenAI','Cohere','Mistral','DeepSeek','Groq','Together AI','Hugging Face','LangChain','LlamaIndex','Pinecone','Weaviate','Supabase','Firebase','Airtable','Linear','Jira','Slack','Asana','Monday.com','ClickUp','Webflow','Framer','Bubble','Retool','Streamlit','Gradio','Modal','Railway','Render','Fly.io','Cloudflare','AWS','Azure','Google Cloud','Vertex AI','SageMaker','Weights & Biases','MLflow','DVC','Label Studio','Scale AI','Snorkel','Comet','Neptune','Grafana','Datadog','Sentry','PostHog','Amplitude','Mixpanel','Segment','Snowflake','Databricks','dbt','Fivetran','Airbyte','Playwright','Selenium','Puppeteer','Cypress','Storybook','Chromatic','Loom','Miro','Excalidraw','Obsidian','Roam','Logseq','Raycast','Arc','Warp','iTerm','Alacritty','Zed','Neovim','VS Code','IntelliJ','PyCharm','WebStorm','Xcode','Android Studio','Unity','Unreal Engine','Godot','Blender','DaVinci Resolve','CapCut','Descript','ElevenLabs','Murf','Synthesia','HeyGen','Runway','Pika','Sora','Kling','Veo','Suno','Udio','AIVA','Soundraw','Boomy','Jasper','Copy.ai','Writer','Grammarly','Hemingway','ProWritingAid','QuillBot','Wordtune','Otter.ai','Fireflies','Granola','Tactiq','tl;dv','Gong','Chorus','Salesforce','HubSpot','Pipedrive','Zoho','Freshworks','Intercom','Zendesk','Drift','Ada','Crisp','Tidio','ManyChat','Voiceflow','Botpress','Rasa','Dialogflow','Amazon Lex','Power Automate','UiPath','Automation Anywhere','Blue Prism','Kore.ai','Coze','Dify','FlowiseAI','Langflow','CrewAI','AutoGen','OpenClaw','Open Claw'];
+
+    function levenshtein(a, b) {
+      var m = a.length, n = b.length, d = [];
+      for (var i = 0; i <= m; i++) { d[i] = [i]; }
+      for (var j = 0; j <= n; j++) { d[0][j] = j; }
+      for (i = 1; i <= m; i++) {
+        for (j = 1; j <= n; j++) {
+          d[i][j] = Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+(a[i-1].toLowerCase()!==b[j-1].toLowerCase()?1:0));
+        }
+      }
+      return d[m][n];
+    }
+
+    function suggestTool(input) {
+      if (!input || input.length < 2) return null;
+      var lower = input.toLowerCase().trim();
+      // Exact match (case-insensitive)
+      for (var i = 0; i < knownTools.length; i++) {
+        if (knownTools[i].toLowerCase() === lower) return null; // exact match, no suggestion needed
+      }
+      // Find closest match
+      var best = null, bestDist = Infinity;
+      for (var i = 0; i < knownTools.length; i++) {
+        var dist = levenshtein(lower, knownTools[i].toLowerCase());
+        var threshold = Math.max(1, Math.floor(knownTools[i].length * 0.3)); // allow ~30% character difference
+        if (dist > 0 && dist <= threshold && dist < bestDist) {
+          bestDist = dist;
+          best = knownTools[i];
+        }
+      }
+      return best;
+    }
+
+    function checkSpelling() {
+      var tn = document.getElementById('toolName').value.trim();
+      var suggestion = suggestTool(tn);
+      var el = document.getElementById('spellSuggestion');
+      if (suggestion) {
+        el.innerHTML = 'Did you mean <strong style="color:var(--cyan-dark);cursor:pointer;text-decoration:underline;" onclick="document.getElementById(\'toolName\').value=\'' + suggestion.replace(/'/g, "\\'") + '\';document.getElementById(\'spellSuggestion\').style.display=\'none\';">' + suggestion + '</strong>?';
+        el.style.display = 'block';
+      } else {
+        el.style.display = 'none';
+      }
     }
 
     async function runEvaluation(){
