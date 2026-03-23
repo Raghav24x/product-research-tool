@@ -369,8 +369,11 @@
       if(!e)return e;
       ['one_line_verdict','what_it_does','practical_cost','build_vs_buy','bottom_line','calibration_note'].forEach(function(k){if(e[k])e[k]=stripMd(e[k]);});
       ['strengths','limitations','watch_out_for','who_its_for','community_opinions'].forEach(function(k){if(e[k])e[k]=e[k].map(stripMd);});
-      if(e.scorecard){for(var k in e.scorecard){if(e.scorecard[k].rationale)e.scorecard[k].rationale=stripMd(e.scorecard[k].rationale);}}
+      if(e.scorecard){for(var k in e.scorecard){if(e.scorecard[k].rationale)e.scorecard[k].rationale=stripMd(e.scorecard[k].rationale);if(e.scorecard[k].score>5)e.scorecard[k].score=5;if(e.scorecard[k].score<1)e.scorecard[k].score=1;}}
       if(e.alternatives){e.alternatives.forEach(function(a){if(a.why)a.why=stripMd(a.why);});}
+      // Recalculate overall score from scorecard to prevent Gemini math errors
+      if(e.scorecard){var total=0,count=0;for(var k in e.scorecard){total+=e.scorecard[k].score;count++;}if(count>0){e.overall_score=Math.round((total/count)*2)/2;}}
+      if(e.overall_score>5)e.overall_score=5;
       return e;
     }
 
@@ -396,13 +399,19 @@
     function submitFeedback() {
       if (!_feedbackRating) return;
       var comment = document.getElementById('feedbackText').value.trim();
-      // Send to Google Sheets via GET with no-cors
+      // Send to Google Sheets via dynamic script tag (bypasses all CORS restrictions)
       if (SHEET_URL) {
         var params = '?timestamp=' + encodeURIComponent(new Date().toISOString())
           + '&toolName=' + encodeURIComponent(_lastToolName || 'unknown')
           + '&rating=' + encodeURIComponent(_feedbackRating)
-          + '&comment=' + encodeURIComponent(comment || '');
-        fetch(SHEET_URL + params, { method: 'GET', mode: 'no-cors' }).catch(function(){});
+          + '&comment=' + encodeURIComponent(comment || '')
+          + '&callback=_fbcb';
+        window._fbcb = function() {}; // dummy callback
+        var script = document.createElement('script');
+        script.src = SHEET_URL + params;
+        script.onerror = function() { this.remove(); };
+        script.onload = function() { this.remove(); };
+        document.head.appendChild(script);
       }
       // Backend backup
       fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rating: _feedbackRating, comment: comment, toolName: _lastToolName }) }).catch(function(){});
