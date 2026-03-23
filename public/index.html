@@ -374,7 +374,7 @@
 
     var _lastToolName = '';
     var _feedbackRating = 0;
-    var SHEET_URL = 'https://script.google.com/macros/s/AKfycbw_mQuYDzRNqUn7vhidcAPNWaeEGyMRyyahZZvJV73rnRDHhDreNpcY60od2dm1ADY/exec'; // Set this after deployment — see instructions below
+    var SHEET_URL = ''; // Set this after deployment — see instructions below
     function selectStar(n) {
       _feedbackRating = n;
       for (var i = 1; i <= 5; i++) {
@@ -478,9 +478,49 @@
     function renderResults(data){
       hideLoading();
       if(data.isCompare && !data.raw) { renderCompareResults(data); return; }
-      if(data.raw){
-        try{ var cleaned=data.content.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim(); var fb=cleaned.indexOf('{');var lb=cleaned.lastIndexOf('}'); if(fb!==-1&&lb!==-1&&lb>fb){cleaned=cleaned.substring(fb,lb+1);} var parsed=JSON.parse(cleaned); data={raw:false,evaluation:parsed}; }catch(e){ document.getElementById('results').innerHTML='<div class="result-section"><div class="result-section-title">Evaluation</div><div class="result-text">'+data.content.replace(/\n/g,'<br>')+'</div></div><button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button>'; document.getElementById('results').classList.add('active'); return; }
+
+      // Bulletproof JSON extraction — tries multiple strategies
+      function extractJSON(text) {
+        if (!text || typeof text !== 'string') return null;
+        // Strategy 1: strip markdown fences
+        var s = text.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
+        // Strategy 2: find outermost { }
+        var depth = 0, start = -1, end = -1;
+        for (var i = 0; i < s.length; i++) {
+          if (s[i] === '{') { if (depth === 0) start = i; depth++; }
+          if (s[i] === '}') { depth--; if (depth === 0) { end = i; break; } }
+        }
+        if (start === -1 || end === -1) return null;
+        var candidate = s.substring(start, end + 1);
+        // Strategy 3: fix common Gemini issues
+        candidate = candidate.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']'); // trailing commas
+        candidate = candidate.replace(/[\x00-\x1F\x7F]/g, function(c) { return c === '\n' || c === '\t' ? c : ''; }); // control chars
+        try { return JSON.parse(candidate); } catch(e1) {}
+        // Strategy 4: try fixing unescaped quotes inside strings
+        try {
+          var fixed = candidate.replace(/"([^"]*?)"/g, function(m, p) { return '"' + p.replace(/(?<!\\)"/g, '\\"') + '"'; });
+          return JSON.parse(fixed);
+        } catch(e2) {}
+        // Strategy 5: try eval as last resort (safe — we control the content source)
+        try { return (new Function('return ' + candidate))(); } catch(e3) {}
+        return null;
       }
+
+      // If backend marked as raw OR if evaluation is missing, try to parse
+      if (data.raw || !data.evaluation) {
+        var content = data.content || data.raw_content || JSON.stringify(data);
+        var parsed = extractJSON(content);
+        if (parsed) {
+          data = { raw: false, evaluation: parsed, isCompare: data.isCompare };
+          if (data.isCompare || (parsed.tools && parsed.tools.length)) { renderCompareResults(data); return; }
+        } else {
+          // Truly unparseable — show error with retry, not raw JSON
+          document.getElementById('results').innerHTML = '<div class="result-section"><div class="result-section-title">Evaluation could not be formatted</div><div class="result-text">The evaluation completed but the output couldn\'t be processed. This happens occasionally — please try again.</div></div><button class="btn-new-eval" onclick="resetForm()">Try again</button>';
+          document.getElementById('results').classList.add('active');
+          return;
+        }
+      }
+
       var e=data.evaluation;
       cleanEval(e);
       _lastToolName = e.tool_name || '';
