@@ -399,21 +399,22 @@
     function submitFeedback() {
       if (!_feedbackRating) return;
       var comment = document.getElementById('feedbackText').value.trim();
-      // Send to Google Sheets via dynamic script tag (bypasses all CORS restrictions)
       if (SHEET_URL) {
         var params = '?timestamp=' + encodeURIComponent(new Date().toISOString())
           + '&toolName=' + encodeURIComponent(_lastToolName || 'unknown')
           + '&rating=' + encodeURIComponent(_feedbackRating)
-          + '&comment=' + encodeURIComponent(comment || '')
-          + '&callback=_fbcb';
-        window._fbcb = function() {}; // dummy callback
-        var script = document.createElement('script');
-        script.src = SHEET_URL + params;
-        script.onerror = function() { this.remove(); };
-        script.onload = function() { this.remove(); };
-        document.head.appendChild(script);
+          + '&comment=' + encodeURIComponent(comment || '');
+        var iframe = document.getElementById('sheetFrame');
+        if (!iframe) {
+          iframe = document.createElement('iframe');
+          iframe.id = 'sheetFrame';
+          iframe.style.display = 'none';
+          iframe.style.width = '0';
+          iframe.style.height = '0';
+          document.body.appendChild(iframe);
+        }
+        iframe.src = SHEET_URL + params;
       }
-      // Backend backup
       fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rating: _feedbackRating, comment: comment, toolName: _lastToolName }) }).catch(function(){});
       document.getElementById('feedbackWidget').innerHTML = '<div class="feedback-thanks">Thanks — your feedback shapes the next version.</div>';
     }
