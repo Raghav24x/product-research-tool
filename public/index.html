@@ -383,7 +383,9 @@
 
     var _lastToolName = '';
     var _feedbackRating = 0;
-    var SHEET_URL = ''; // Set this after deployment — see instructions below
+    // ===== PASTE YOUR GOOGLE APPS SCRIPT URL BELOW =====
+    var SHEET_URL = 'https://script.google.com/macros/s/AKfycbw_mQuYDzRNqUn7vhidcAPNWaeEGyMRyyahZZvJV73rnRDHhDreNpcY60od2dm1ADY/exec';
+    // ===================================================
     function selectStar(n) {
       _feedbackRating = n;
       for (var i = 1; i <= 5; i++) {
@@ -394,37 +396,18 @@
     function submitFeedback() {
       if (!_feedbackRating) return;
       var comment = document.getElementById('feedbackText').value.trim();
-      var payload = { timestamp: new Date().toISOString(), toolName: _lastToolName, rating: _feedbackRating, comment: comment };
-      // Post to Google Sheets via Apps Script
+      // Send to Google Sheets via GET (most reliable cross-origin method)
       if (SHEET_URL) {
-        try {
-          var form = document.createElement('form');
-          form.method = 'POST';
-          form.action = SHEET_URL;
-          form.target = '_blank';
-          form.style.display = 'none';
-          // Use a hidden iframe instead of _blank to avoid opening a new tab
-          var iframe = document.getElementById('feedbackFrame');
-          if (!iframe) {
-            iframe = document.createElement('iframe');
-            iframe.id = 'feedbackFrame';
-            iframe.name = 'feedbackFrame';
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
-          }
-          form.target = 'feedbackFrame';
-          var input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = 'payload';
-          input.value = JSON.stringify(payload);
-          form.appendChild(input);
-          document.body.appendChild(form);
-          form.submit();
-          document.body.removeChild(form);
-        } catch(e) { console.error('Sheet feedback failed:', e); }
+        var params = '?timestamp=' + encodeURIComponent(new Date().toISOString())
+          + '&toolName=' + encodeURIComponent(_lastToolName || 'unknown')
+          + '&rating=' + encodeURIComponent(_feedbackRating)
+          + '&comment=' + encodeURIComponent(comment || '');
+        // Image beacon — works everywhere, no CORS issues
+        var img = new Image();
+        img.src = SHEET_URL + params;
       }
       // Backend backup
-      fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(function(){});
+      fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rating: _feedbackRating, comment: comment, toolName: _lastToolName }) }).catch(function(){});
       document.getElementById('feedbackWidget').innerHTML = '<div class="feedback-thanks">Thanks — your feedback shapes the next version.</div>';
     }
 
@@ -525,6 +508,68 @@
       document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
     }
 
+    /* --- Fallback renderer for unparseable JSON — extracts human-readable content --- */
+    function renderRawFallback(text) {
+      var html = '';
+      // Extract key-value pairs using regex — works even on malformed JSON
+      var fields = {
+        'tool_name': 'Tool',
+        'one_line_verdict': 'Verdict',
+        'what_it_does': 'What it does',
+        'practical_cost': 'Practical cost',
+        'build_vs_buy': 'Build vs Buy',
+        'bottom_line': 'How it fits your requirements'
+      };
+      var arrayFields = {
+        'strengths': {title: 'Strengths', cls: 'strengths'},
+        'limitations': {title: 'Limitations', cls: 'limitations'},
+        'who_its_for': {title: 'Who it is for', cls: 'default'},
+        'watch_out_for': {title: 'Watch out for', cls: 'warnings'}
+      };
+
+      // Extract simple string fields
+      for (var key in fields) {
+        var regex = new RegExp('"' + key + '"\\s*:\\s*"([^"]*(?:\\\\"[^"]*)*)"');
+        var match = text.match(regex);
+        if (match && match[1]) {
+          var val = stripMd(match[1].replace(/\\"/g, '"').replace(/\\n/g, ' '));
+          if (key === 'tool_name') {
+            html += '<div class="result-header-card"><div class="result-header"><div class="result-tool-name">' + val + '</div></div></div>';
+          } else {
+            html += '<div class="result-section"><div class="result-section-title">' + fields[key] + '</div><div class="result-text">' + val + '</div></div>';
+          }
+        }
+      }
+
+      // Extract array fields
+      for (var aKey in arrayFields) {
+        var aRegex = new RegExp('"' + aKey + '"\\s*:\\s*\\[([^\\]]+)\\]');
+        var aMatch = text.match(aRegex);
+        if (aMatch && aMatch[1]) {
+          var items = aMatch[1].match(/"([^"]*(?:\\\\"[^"]*)*)"/g);
+          if (items && items.length) {
+            html += '<div class="result-section"><div class="result-section-title">' + arrayFields[aKey].title + '</div><ul class="result-list ' + arrayFields[aKey].cls + '">';
+            items.forEach(function(item) {
+              var clean = stripMd(item.replace(/^"|"$/g, '').replace(/\\"/g, '"').replace(/\\n/g, ' '));
+              if (clean) html += '<li>' + clean + '</li>';
+            });
+            html += '</ul></div>';
+          }
+        }
+      }
+
+      if (!html) {
+        // Absolute last resort — strip JSON formatting and show as readable text
+        var readable = text.replace(/[{}\[\]]/g, '').replace(/"(\w+)":/g, '').replace(/",?/g, '\n').replace(/\\n/g, '\n').trim();
+        html = '<div class="result-section"><div class="result-section-title">Evaluation</div><div class="result-text">' + readable.replace(/\n/g, '<br>') + '</div></div>';
+      }
+
+      html += '<div class="results-actions"><button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button><button class="btn-pdf" onclick="downloadPDF()">&#128196; Download PDF</button></div>';
+      document.getElementById('results').innerHTML = html;
+      document.getElementById('results').classList.add('active');
+      document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+    }
+
     function renderResults(data){
       hideLoading();
       if(data.isCompare && !data.raw) { renderCompareResults(data); return; }
@@ -564,9 +609,8 @@
           data = { raw: false, evaluation: parsed, isCompare: data.isCompare };
           if (data.isCompare || (parsed.tools && parsed.tools.length)) { renderCompareResults(data); return; }
         } else {
-          // Truly unparseable — show error with retry, not raw JSON
-          document.getElementById('results').innerHTML = '<div class="result-section"><div class="result-section-title">Evaluation could not be formatted</div><div class="result-text">The evaluation completed but the output couldn\'t be processed. This happens occasionally — please try again.</div></div><button class="btn-new-eval" onclick="resetForm()">Try again</button>';
-          document.getElementById('results').classList.add('active');
+          // Last resort: extract readable content from the raw text and display it nicely
+          renderRawFallback(content);
           return;
         }
       }
