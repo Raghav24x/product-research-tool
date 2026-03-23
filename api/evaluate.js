@@ -255,8 +255,7 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
     tools: [{ google_search: {} }],
     generationConfig: {
       maxOutputTokens: isCompare ? 6000 : 4000,
-      temperature: 0.3,
-      responseMimeType: "application/json"
+      temperature: 0.3
     }
   };
 
