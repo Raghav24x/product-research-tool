@@ -399,23 +399,11 @@
     function submitFeedback() {
       if (!_feedbackRating) return;
       var comment = document.getElementById('feedbackText').value.trim();
-      if (SHEET_URL) {
-        var params = '?timestamp=' + encodeURIComponent(new Date().toISOString())
-          + '&toolName=' + encodeURIComponent(_lastToolName || 'unknown')
-          + '&rating=' + encodeURIComponent(_feedbackRating)
-          + '&comment=' + encodeURIComponent(comment || '');
-        var iframe = document.getElementById('sheetFrame');
-        if (!iframe) {
-          iframe = document.createElement('iframe');
-          iframe.id = 'sheetFrame';
-          iframe.style.display = 'none';
-          iframe.style.width = '0';
-          iframe.style.height = '0';
-          document.body.appendChild(iframe);
-        }
-        iframe.src = SHEET_URL + params;
-      }
-      fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rating: _feedbackRating, comment: comment, toolName: _lastToolName }) }).catch(function(){});
+      fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: _feedbackRating, comment: comment, toolName: _lastToolName, timestamp: new Date().toISOString() })
+      }).catch(function(){});
       document.getElementById('feedbackWidget').innerHTML = '<div class="feedback-thanks">Thanks — your feedback shapes the next version.</div>';
     }
 
@@ -582,58 +570,29 @@
       hideLoading();
       if(data.isCompare && !data.raw) { try { renderCompareResults(data); return; } catch(ce) { console.error('Compare render error:', ce); } }
 
-      // Bulletproof JSON extraction — tries multiple strategies
-      function extractJSON(text) {
-        try {
-          if (!text || typeof text !== 'string') return null;
-          var s = text.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
-          // Find outermost { } using depth tracking
-          var depth = 0, start = -1, end = -1;
-          for (var i = 0; i < s.length; i++) {
-            if (s[i] === '{') { if (depth === 0) start = i; depth++; }
-            if (s[i] === '}') { depth--; if (depth === 0) { end = i; break; } }
+      // If raw, try one clean parse attempt then fall back to readable display
+      if(data.raw){
+        try{
+          var cleaned = (data.content || '').replace(/```json\s*/gi,'').replace(/```\s*/gi,'').trim();
+          var fb = cleaned.indexOf('{');
+          var lb = cleaned.lastIndexOf('}');
+          if(fb !== -1 && lb !== -1 && lb > fb){
+            cleaned = cleaned.substring(fb, lb + 1);
+            cleaned = cleaned.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+            var parsed = JSON.parse(cleaned);
+            data = {raw: false, evaluation: parsed, isCompare: data.isCompare};
+            if(data.isCompare || (parsed.tools && parsed.tools.length)) { try { renderCompareResults(data); return; } catch(ce) {} }
+          } else {
+            renderRawFallback(data.content || '');
+            return;
           }
-          if (start === -1 || end === -1) return null;
-          var candidate = s.substring(start, end + 1);
-          // Fix trailing commas
-          candidate = candidate.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
-          // Remove control characters except whitespace
-          candidate = candidate.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-          // Attempt 1: direct parse
-          try { return JSON.parse(candidate); } catch(e1) {}
-          // Attempt 2: escape unescaped newlines inside strings
-          var fixed = candidate.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
-          try { return JSON.parse(fixed); } catch(e2) {}
-          // Attempt 3: try with the simpler first/last brace approach on original text
-          var fb = s.indexOf('{'), lb = s.lastIndexOf('}');
-          if (fb !== -1 && lb > fb) {
-            var simple = s.substring(fb, lb + 1).replace(/,\s*}/g, '}').replace(/,\s*]/g, ']').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-            try { return JSON.parse(simple); } catch(e3) {}
-            // Attempt 4: aggressive newline escape on simple extract
-            try { return JSON.parse(simple.replace(/\n/g, '\\n').replace(/\r/g, '\\r')); } catch(e4) {}
-          }
-          return null;
-        } catch(outerErr) {
-          console.error('extractJSON error:', outerErr);
-          return null;
-        }
-      }
-
-      // If backend marked as raw OR if evaluation is missing, try to parse
-      if (data.raw || !data.evaluation) {
-        var content = data.content || data.raw_content || '';
-        if (typeof content !== 'string') { try { content = JSON.stringify(content); } catch(e) { content = ''; } }
-        var parsed = extractJSON(content);
-        if (parsed) {
-          data = { raw: false, evaluation: parsed, isCompare: data.isCompare };
-          if (data.isCompare || (parsed.tools && parsed.tools.length)) { try { renderCompareResults(data); return; } catch(ce) {} }
-        } else {
-          renderRawFallback(content);
+        } catch(e){
+          // JSON parse failed — show readable extraction instead of error
+          renderRawFallback(data.content || '');
           return;
         }
       }
 
-      // Safety check — if evaluation is still missing after parsing, use fallback
       if (!data.evaluation) {
         renderRawFallback(data.content || JSON.stringify(data));
         return;
