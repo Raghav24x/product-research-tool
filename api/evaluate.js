@@ -200,9 +200,16 @@ export default async function handler(req, res) {
 
   if (isCompare) {
     const allTools = [toolName, ...compareTools].slice(0, 3);
-    userMessage = `Compare these AI tools side by side: ${allTools.join(", ")}${toolUrl ? ` (primary tool URL: ${toolUrl})` : ""}
+    const toolList = allTools.map(function(t, i) { return (i + 1) + '. "' + t + '" — evaluate this EXACT name, not the parent product or a similar-sounding tool'; }).join('\n');
+    userMessage = `Compare these AI tools side by side:
+${toolList}
+${toolUrl ? `(primary tool URL: ${toolUrl})` : ""}
 
-CRITICAL: Evaluate the EXACT tools named above. Each tool name is precise and intentional. "Perplexity Computer" means the Computer feature specifically — NOT Perplexity AI in general. "Cursor" means Cursor the code editor — NOT cursor.so the domain registrar. If a name refers to a specific feature or version of a broader product, evaluate THAT feature, not the parent product.
+CRITICAL — READ CAREFULLY: Each tool name above is EXACT. Do NOT substitute, generalize, or expand any name.
+- "Perplexity Computer" = the agentic Computer feature of Perplexity, NOT Perplexity AI the search engine
+- "Claude Code" = the CLI agentic coding tool, NOT Claude the chatbot
+- "Cursor" = the AI code editor, NOT any other product
+If a name refers to a specific feature, version, or tier of a broader product, you MUST evaluate ONLY that specific feature/version/tier. Your tool_name field in the output must match the exact name the user provided.
 
 User context for calibration:
 - Role: ${role || "Not specified"}
@@ -211,7 +218,7 @@ User context for calibration:
 - Evaluating for: ${evaluationPurpose || "Not specified"}
 - Monthly budget for this tool category: ${budget || "Not specified"}${additionalContext ? `\n- Additional context: ${additionalContext}` : ""}
 
-Research ALL tools thoroughly before scoring. For each tool, check official website, pricing, documentation, and independent reviews. Score all tools on the same 8 dimensions so they're directly comparable.
+Research ALL tools thoroughly before scoring. For each tool, check its official website, pricing, documentation, and independent reviews. Score all tools on the same 8 dimensions so they're directly comparable.
 
 Your verdict must recommend the best fit for THIS specific user's context.${additionalContext ? " Pay special attention to their additional context." : ""}`;
   } else {
