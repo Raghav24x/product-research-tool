@@ -255,7 +255,8 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
     tools: [{ google_search: {} }],
     generationConfig: {
       maxOutputTokens: isCompare ? 6000 : 4000,
-      temperature: 0.3
+      temperature: 0.3,
+      responseMimeType: "application/json"
     }
   };
 
@@ -287,10 +288,37 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
     }
 
     let evaluation;
-    try {
-      let cleaned = textContent.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    
+    // Helper: attempt multiple JSON parse strategies
+    function tryParse(text) {
+      // Strategy 1: direct parse
+      try { return JSON.parse(text); } catch(e) {}
       
-      // Find outermost { } using depth tracking (handles nested objects)
+      // Strategy 2: fix trailing commas
+      var s = text.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+      try { return JSON.parse(s); } catch(e) {}
+      
+      // Strategy 3: fix unescaped newlines inside strings
+      s = s.replace(/(?<=":[\s]*"[^"]*)\n/g, '\\n');
+      try { return JSON.parse(s); } catch(e) {}
+      
+      // Strategy 4: fix unescaped quotes inside strings (common Gemini issue)
+      s = text.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+      s = s.replace(/"([^"\\]*(?:\\.[^"\\]*)*)"/g, function(m) { return m; }); // keep valid
+      try { return JSON.parse(s); } catch(e) {}
+      
+      // Strategy 5: remove all control characters except basic whitespace
+      s = text.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+      s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+      try { return JSON.parse(s); } catch(e) {}
+      
+      return null;
+    }
+    
+    try {
+      let cleaned = textContent.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
+      
+      // Find outermost { } using depth tracking
       let depth = 0, start = -1, end = -1;
       for (let i = 0; i < cleaned.length; i++) {
         if (cleaned[i] === '{') { if (depth === 0) start = i; depth++; }
@@ -301,13 +329,24 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
         cleaned = cleaned.substring(start, end + 1);
       }
       
-      // Fix common Gemini JSON issues
-      cleaned = cleaned.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']'); // trailing commas
-      cleaned = cleaned.replace(/[\x00-\x1F\x7F]/g, function(c) { return c === '\n' || c === '\t' || c === '\r' ? c : ''; }); // control chars
+      evaluation = tryParse(cleaned);
       
-      evaluation = JSON.parse(cleaned);
+      if (!evaluation) {
+        // Try from the raw textContent without depth tracking
+        let raw = textContent.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
+        let fb = raw.indexOf('{');
+        let lb = raw.lastIndexOf('}');
+        if (fb !== -1 && lb !== -1 && lb > fb) {
+          evaluation = tryParse(raw.substring(fb, lb + 1));
+        }
+      }
+      
+      if (!evaluation) {
+        console.error("JSON parse failed. Raw content length:", textContent.length, "First 200 chars:", textContent.substring(0, 200));
+        return res.status(200).json({ raw: true, content: textContent });
+      }
     } catch (parseError) {
-      // Last resort: send raw content and let frontend try harder
+      console.error("Parse error:", parseError.message);
       return res.status(200).json({ raw: true, content: textContent });
     }
 
