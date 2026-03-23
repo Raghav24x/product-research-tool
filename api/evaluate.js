@@ -277,13 +277,25 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
     let evaluation;
     try {
       let cleaned = textContent.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
-      const firstBrace = cleaned.indexOf("{");
-      const lastBrace = cleaned.lastIndexOf("}");
-      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-        cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+      
+      // Find outermost { } using depth tracking (handles nested objects)
+      let depth = 0, start = -1, end = -1;
+      for (let i = 0; i < cleaned.length; i++) {
+        if (cleaned[i] === '{') { if (depth === 0) start = i; depth++; }
+        if (cleaned[i] === '}') { depth--; if (depth === 0) { end = i; break; } }
       }
+      
+      if (start !== -1 && end !== -1) {
+        cleaned = cleaned.substring(start, end + 1);
+      }
+      
+      // Fix common Gemini JSON issues
+      cleaned = cleaned.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']'); // trailing commas
+      cleaned = cleaned.replace(/[\x00-\x1F\x7F]/g, function(c) { return c === '\n' || c === '\t' || c === '\r' ? c : ''; }); // control chars
+      
       evaluation = JSON.parse(cleaned);
     } catch (parseError) {
+      // Last resort: send raw content and let frontend try harder
       return res.status(200).json({ raw: true, content: textContent });
     }
 
