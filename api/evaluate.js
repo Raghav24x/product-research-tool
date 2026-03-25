@@ -1,4 +1,4 @@
-// Product Research Tool — Backend v0.4
+// AI Tool Evaluator — Backend v0.4
 // Gemini 2.5 Flash REST API (no SDK)
 // Modes: evaluate (single tool) | compare (2-3 tools side by side)
 
