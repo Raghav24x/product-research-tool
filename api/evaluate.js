@@ -162,7 +162,7 @@ Return ONLY valid JSON. No markdown fences, no preamble, no text outside JSON.
 }`;
 
 // --- YouTube traction helper ---
-async function fetchYouTubeTraction(toolName) {
+export async function fetchYouTubeTraction(toolName) {
   const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
   if (!YOUTUBE_API_KEY) {
     console.warn("YOUTUBE_API_KEY not configured, skipping traction lookup.");
