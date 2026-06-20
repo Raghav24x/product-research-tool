@@ -161,6 +161,73 @@ Return ONLY valid JSON. No markdown fences, no preamble, no text outside JSON.
   "verdict": "string (2-3 sentences, which tool fits THIS user best and why, plain text)"
 }`;
 
+// --- YouTube traction helper ---
+async function fetchYouTubeTraction(toolName) {
+  const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+  if (!YOUTUBE_API_KEY) {
+    console.warn("YOUTUBE_API_KEY not configured, skipping traction lookup.");
+    return null;
+  }
+
+  const publishedAfter = new Date();
+  publishedAfter.setFullYear(publishedAfter.getFullYear() - 1);
+
+  const searchParams = new URLSearchParams({
+    part: "snippet",
+    q: toolName,
+    type: "video",
+    order: "viewCount",
+    maxResults: "3",
+    publishedAfter: publishedAfter.toISOString(),
+    key: YOUTUBE_API_KEY
+  });
+
+  const searchUrl = `https://www.googleapis.com/youtube/v3/search?${searchParams.toString()}`;
+
+  const searchResponse = await fetch(searchUrl);
+  if (!searchResponse.ok) {
+    const errBody = await searchResponse.text();
+    console.warn("YouTube search.list failed:", searchResponse.status, errBody);
+    return null;
+  }
+
+  const searchData = await searchResponse.json();
+  const videoIds = (searchData.items || [])
+    .map(item => item.id && item.id.videoId)
+    .filter(Boolean);
+
+  if (videoIds.length === 0) return [];
+
+  const videosParams = new URLSearchParams({
+    part: "snippet,statistics",
+    id: videoIds.join(","),
+    key: YOUTUBE_API_KEY
+  });
+
+  const videosUrl = `https://www.googleapis.com/youtube/v3/videos?${videosParams.toString()}`;
+
+  const videosResponse = await fetch(videosUrl);
+  if (!videosResponse.ok) {
+    const errBody = await videosResponse.text();
+    console.warn("YouTube videos.list failed:", videosResponse.status, errBody);
+    return null;
+  }
+
+  const videosData = await videosResponse.json();
+
+  return (videosData.items || [])
+    .map(item => ({
+      title: item.snippet.title,
+      video_url: `https://www.youtube.com/watch?v=${item.id}`,
+      channel_name: item.snippet.channelTitle,
+      published_at: item.snippet.publishedAt,
+      view_count: Number(item.statistics.viewCount || 0),
+      comment_count: Number(item.statistics.commentCount || 0)
+    }))
+    .sort((a, b) => b.view_count - a.view_count)
+    .slice(0, 3);
+}
+
 // --- Retry helper for 503 errors ---
 async function fetchWithRetry(url, options, maxRetries = 2) {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -266,11 +333,26 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
   };
 
   try {
-    const response = await fetchWithRetry(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody)
-    });
+    const [geminiResult, youtubeResult] = await Promise.allSettled([
+      fetchWithRetry(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody)
+      }),
+      fetchYouTubeTraction(toolName)
+    ]);
+
+    let youtube_traction = null;
+    if (youtubeResult.status === "fulfilled") {
+      youtube_traction = youtubeResult.value;
+    } else {
+      console.warn("YouTube traction lookup failed:", youtubeResult.reason);
+    }
+
+    if (geminiResult.status === "rejected") {
+      throw geminiResult.reason;
+    }
+    const response = geminiResult.value;
 
     if (!response.ok) {
       const errBody = await response.text();
@@ -289,7 +371,7 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
     }
 
     if (!textContent) {
-      return res.status(200).json({ raw: true, content: "No evaluation generated. Please try again." });
+      return res.status(200).json({ raw: true, content: "No evaluation generated. Please try again.", youtube_traction });
     }
 
     let evaluation;
@@ -348,14 +430,14 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
       
       if (!evaluation) {
         console.error("JSON parse failed. Raw content length:", textContent.length, "First 200 chars:", textContent.substring(0, 200));
-        return res.status(200).json({ raw: true, content: textContent });
+        return res.status(200).json({ raw: true, content: textContent, youtube_traction });
       }
     } catch (parseError) {
       console.error("Parse error:", parseError.message);
-      return res.status(200).json({ raw: true, content: textContent });
+      return res.status(200).json({ raw: true, content: textContent, youtube_traction });
     }
 
-    return res.status(200).json({ raw: false, evaluation, isCompare });
+    return res.status(200).json({ raw: false, evaluation, isCompare, youtube_traction });
   } catch (error) {
     console.error("API Error:", error);
     return res.status(500).json({
