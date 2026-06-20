@@ -54,6 +54,7 @@ product-research-tool/
 | `GEMINI_API_KEY` | Google AI Studio API key (free tier) |
 | `ACCESS_CODE` | Beta access code (embedded in URL as `?code=VALUE`) |
 | `FEEDBACK_SHEET_URL` | Google Apps Script URL for feedback (optional, currently blocked by network) |
+| `YOUTUBE_API_KEY` | YouTube Data API v3 key, used for "Real-World Traction" video lookup (optional — feature degrades gracefully if unset) |
 
 ---
 
