@@ -136,6 +136,12 @@
     .alternative-name:hover { text-decoration: underline; }
     .alternative-why { color: var(--text-secondary); }
     .bottom-line { font-size: 15px; font-weight: 500; color: var(--text-primary); line-height: 1.7; }
+    .traction-grid { display: grid; gap: 10px; }
+    .traction-card { display: block; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); text-decoration: none; transition: border-color 0.15s; }
+    .traction-card:hover { border-color: var(--cyan); }
+    .traction-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+    .traction-meta { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+    .traction-stats { font-size: 12px; color: var(--text-muted); }
     .results-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
     .btn-new-eval { font-family: var(--font-body); font-size: 14px; font-weight: 700; color: var(--orange); background: transparent; border: 1px solid var(--orange); border-radius: var(--radius-sm); padding: 10px 20px; cursor: pointer; display: inline-block; transition: background 0.15s; }
     .btn-new-eval:hover { background: var(--orange-light); }
@@ -378,6 +384,7 @@
     }
     /* --- Clean markdown from Gemini output --- */
     function stripMd(s){if(typeof s!=='string')return s;return s.replace(/\*\*/g,'').replace(/\*/g,'').replace(/^#+\s*/gm,'').replace(/\[(\d+)\]/g,'').replace(/`/g,'').trim();}
+    function escapeHtml(s){if(typeof s!=='string')return s;return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
     function cleanEval(e){
       if(!e)return e;
       ['one_line_verdict','what_it_does','practical_cost','build_vs_buy','bottom_line','calibration_note'].forEach(function(k){if(e[k])e[k]=stripMd(e[k]);});
@@ -620,7 +627,10 @@
       sc+='<div class="scorecard-hint">Click any row to see the rationale</div>';
       var alt='';if(e.alternatives){alt=e.alternatives.map(function(a){var nameHtml=a.url?'<a href="'+a.url+'" target="_blank" class="alternative-name">'+a.name+' &#8599;</a>':'<span class="alternative-name" style="color:var(--text-primary)">'+a.name+':</span>';return'<div class="alternative-item">'+nameHtml+'<span class="alternative-why">'+a.why+'</span></div>';}).join('');}
       var toolNameHtml = e.tool_url ? '<a href="'+e.tool_url+'" target="_blank">'+(e.tool_name||'Evaluation')+' &#8599;</a>' : (e.tool_name||'Evaluation');
-      var tocItems=[{id:'sec-fit',label:'How It Fits'},{id:'sec-what',label:'What It Does'},{id:'sec-scorecard',label:'Scorecard'},{id:'sec-who',label:'Who It\'s For'},{id:'sec-strengths',label:'Strengths'},{id:'sec-limitations',label:'Limitations'},{id:'sec-watchout',label:'Watch Out'},{id:'sec-buildvbuy',label:'Build vs Buy'},{id:'sec-alternatives',label:'Alternatives'},{id:'sec-cost',label:'Cost'},{id:'sec-community',label:'Community*'}];
+      var hasTraction = data.youtube_traction && data.youtube_traction.length > 0;
+      var tocItems=[{id:'sec-fit',label:'How It Fits'},{id:'sec-what',label:'What It Does'},{id:'sec-scorecard',label:'Scorecard'},{id:'sec-who',label:'Who It\'s For'},{id:'sec-strengths',label:'Strengths'},{id:'sec-limitations',label:'Limitations'},{id:'sec-watchout',label:'Watch Out'},{id:'sec-buildvbuy',label:'Build vs Buy'},{id:'sec-alternatives',label:'Alternatives'},{id:'sec-cost',label:'Cost'}];
+      if(hasTraction) tocItems.push({id:'sec-traction',label:'Real-World Traction'});
+      tocItems.push({id:'sec-community',label:'Community*'});
       var tocHtml='<div class="result-toc"><div class="result-toc-title">Jump to</div><div class="result-toc-list">'+tocItems.map(function(t){return'<a href="#'+t.id+'">'+t.label+'</a>';}).join('')+'</div></div>';
       var correctionHtml = '';
       if (e.name_correction && e.name_correction !== e.tool_name) {
@@ -640,6 +650,14 @@
         '<div class="result-section" id="sec-buildvbuy"><div class="result-section-title">Build vs Buy</div><div class="result-text">'+(e.build_vs_buy||'')+'</div></div>'+
         '<div class="result-section" id="sec-alternatives"><div class="result-section-title">Alternatives worth comparing</div>'+alt+'</div>'+
         '<div class="result-section" id="sec-cost"><div class="result-section-title">Practical cost</div><div class="result-text">'+(e.practical_cost||'')+'</div></div>'+
+        (hasTraction?'<div class="result-section" id="sec-traction"><div class="result-section-title">Real-world traction</div><div class="traction-grid">'+data.youtube_traction.map(function(v){
+          var publishedDate = v.published_at ? new Date(v.published_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '';
+          return '<a class="traction-card" href="'+escapeHtml(v.video_url)+'" target="_blank" rel="noopener">'+
+            '<div class="traction-title">'+escapeHtml(v.title)+'</div>'+
+            '<div class="traction-meta">'+escapeHtml(v.channel_name)+' &middot; '+publishedDate+'</div>'+
+            '<div class="traction-stats">'+Number(v.view_count||0).toLocaleString()+' views &middot; '+Number(v.comment_count||0).toLocaleString()+' comments</div>'+
+          '</a>';
+        }).join('')+'</div></div>':'')+
         ((e.community_opinions&&e.community_opinions.length)?'<div class="result-section" id="sec-community" style="border-left:3px solid var(--amber);"><div class="result-section-title">Community opinions *</div><div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;font-style:italic;">Unverified public opinions from forums and social media. Not confirmed by reputable publications. Use as signal, not as fact.</div><ul class="result-list limitations">'+(e.community_opinions).map(function(c){return'<li>'+c+'</li>';}).join('')+'</ul></div>':'')+
         '<div class="results-actions"><button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button><button class="btn-pdf" onclick="downloadPDF()">&#128196; Download PDF</button></div>'+
         '<div class="feedback-widget" id="feedbackWidget"><div class="feedback-title">Rate this evaluation</div><div class="feedback-stars"><span class="feedback-star" id="star1" onclick="selectStar(1)">&#9733;</span><span class="feedback-star" id="star2" onclick="selectStar(2)">&#9733;</span><span class="feedback-star" id="star3" onclick="selectStar(3)">&#9733;</span><span class="feedback-star" id="star4" onclick="selectStar(4)">&#9733;</span><span class="feedback-star" id="star5" onclick="selectStar(5)">&#9733;</span></div><div class="feedback-comment" id="feedbackComment"><textarea id="feedbackText" rows="2" maxlength="300" placeholder="What would make it better?"></textarea><button class="feedback-submit" onclick="submitFeedback()">Submit</button></div></div>';
