@@ -174,10 +174,10 @@ export async function fetchYouTubeTraction(toolName) {
 
   const searchParams = new URLSearchParams({
     part: "snippet",
-    q: toolName,
+    q: `${toolName} software review`,
     type: "video",
-    order: "viewCount",
-    maxResults: "3",
+    order: "relevance",
+    maxResults: "10",
     publishedAfter: publishedAfter.toISOString(),
     key: YOUTUBE_API_KEY
   });
