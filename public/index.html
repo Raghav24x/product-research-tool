@@ -509,6 +509,16 @@
         html += '</div>';
       }
       if (e.verdict) { html += '<div class="result-section"><div class="result-section-title">The verdict — for your context</div><div class="compare-verdict">'+e.verdict+'</div></div>'; }
+      if (data.youtube_traction && data.youtube_traction.length > 0) {
+        html += '<div class="result-section" id="sec-traction"><div class="result-section-title">Real-world traction</div><div class="traction-grid">' + data.youtube_traction.map(function(v){
+          var publishedDate = v.published_at ? new Date(v.published_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '';
+          return '<a class="traction-card" href="'+escapeHtml(v.video_url)+'" target="_blank" rel="noopener">'+
+            '<div class="traction-title">'+escapeHtml(v.title)+'</div>'+
+            '<div class="traction-meta">'+escapeHtml(v.channel_name)+' &middot; '+publishedDate+'</div>'+
+            '<div class="traction-stats">'+Number(v.view_count||0).toLocaleString()+' views &middot; '+Number(v.comment_count||0).toLocaleString()+' comments</div>'+
+          '</a>';
+        }).join('') + '</div></div>';
+      }
       e.tools.forEach(function(t) {
         var sc = '';
         if (t.scorecard) { for (var k in t.scorecard) { var v = t.scorecard[k], pct = (v.score/5)*100, cls = getScoreClass(v.score); sc += '<div class="scorecard-row '+cls+'" onclick="this.classList.toggle(\'expanded\')"><div class="scorecard-label">'+formatLabel(k)+'</div><div class="scorecard-bar-bg"><div class="scorecard-bar-fill" style="width:'+pct+'%"></div></div><div class="scorecard-value">'+v.score+'</div></div><div class="scorecard-rationale">'+v.rationale+'</div>'; } }

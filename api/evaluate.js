@@ -162,7 +162,7 @@ Return ONLY valid JSON. No markdown fences, no preamble, no text outside JSON.
 }`;
 
 // --- YouTube traction helper ---
-export async function fetchYouTubeTraction(toolName) {
+export async function fetchYouTubeTraction(toolName, searchQuery) {
   const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
   if (!YOUTUBE_API_KEY) {
     console.warn("YOUTUBE_API_KEY not configured, skipping traction lookup.");
@@ -174,7 +174,7 @@ export async function fetchYouTubeTraction(toolName) {
 
   const searchParams = new URLSearchParams({
     part: "snippet",
-    q: `${toolName} software review`,
+    q: searchQuery || `${toolName} software review`,
     type: "video",
     order: "relevance",
     maxResults: "10",
@@ -262,6 +262,7 @@ export default async function handler(req, res) {
 
   // Determine if compare mode
   const isCompare = mode === "compare" && compareTools && compareTools.length > 0;
+  const allTools = isCompare ? [toolName, ...compareTools].slice(0, 3) : [toolName];
 
   // Build the system prompt
   const framework = isCompare
@@ -272,7 +273,6 @@ export default async function handler(req, res) {
   let userMessage;
 
   if (isCompare) {
-    const allTools = [toolName, ...compareTools].slice(0, 3);
     const toolList = allTools.map(function(t, i) { return (i + 1) + '. "' + t + '" — evaluate this EXACT name, not the parent product or a similar-sounding tool'; }).join('\n');
     userMessage = `Compare these AI tools side by side:
 ${toolList}
@@ -339,7 +339,10 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody)
       }),
-      fetchYouTubeTraction(toolName)
+      fetchYouTubeTraction(
+        toolName,
+        isCompare ? `${allTools.join(" vs ")} comparison` : undefined
+      )
     ]);
 
     let youtube_traction = null;
