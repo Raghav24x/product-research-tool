@@ -65,7 +65,12 @@ Tier 1 (for scores/facts): Official sites, documentation, pricing pages, reputab
 Tier 2 (community_opinions only): Reddit, HN, Twitter, blogs. NEVER use for scores. Summarize insights in your own words — NEVER include direct quotes, even partial ones. Describe what the person experienced. Only include opinions with a SPECIFIC experience or edge case. Prefix each with source type.
 
 ## Bottom Line (MOST IMPORTANT FIELD)
-2-3 sentences. Does this tool fit THIS SPECIFIC USER's requirements? Reference their role, budget, stated purpose, and current stack directly. Must read like advice from a colleague who knows the user's situation — not a product review.`;
+2-3 sentences. Does this tool fit THIS SPECIFIC USER's requirements? Reference their role, budget, stated purpose, and current stack directly. Must read like advice from a colleague who knows the user's situation — not a product review.
+
+## CRITICAL — The Scorecard Is Never Optional
+- You MUST output a complete "scorecard" object with all 8 dimensions, each with a numeric score 1-5 and a rationale, no matter what. This is the core deliverable of this tool — never skip it, never leave it empty, never omit the field.
+- This applies even if you cannot find the tool, the name is unfamiliar, or you believe it does not exist. In that case, score every dimension low (1-2) and write rationales that say plainly what's missing — e.g. "Could not verify a public product under this name; scored on absence of documented capability." Still fill in strengths, limitations, and every other field with your best-effort honest assessment instead of leaving them empty or generic.
+- Never substitute a short "this tool doesn't exist" message for the structured output. The structured evaluation (scorecard, strengths, limitations, overall_score) must always be present, even when the verdict is that the tool is unverifiable.`;
 
 const COMPARE_FRAMEWORK = `You are an expert AI tool evaluator. The user wants to compare 2-3 tools side by side. Produce a structured comparison calibrated to their specific context.
 
@@ -306,6 +311,8 @@ Your verdict must recommend the best fit for THIS specific user's context.${addi
     userMessage = `Evaluate the AI tool: ${toolName}${toolUrl ? ` (${toolUrl})` : ""}
 
 CRITICAL: Evaluate the EXACT tool or feature named above. The name is precise and intentional. "Perplexity Computer" means the Computer feature specifically — NOT Perplexity AI in general. "Claude Code" means the CLI tool — NOT Claude the chatbot. If the name refers to a specific feature, product tier, or version of a broader product, evaluate THAT specific thing, not the parent product.
+
+MANDATORY: You must return a complete scorecard with all 8 dimensions scored, plus strengths, limitations, and overall_score — even if you cannot verify this tool exists or find a public product under this exact name. If that's the case, score every dimension low and say so in each rationale, but never omit the scorecard or substitute a short non-evaluation message in its place.
 
 User context for calibration:
 - Role: ${role || "Not specified"}
