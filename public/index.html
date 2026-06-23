@@ -525,7 +525,7 @@
     }
 
     /* --- Fallback renderer for unparseable JSON — extracts human-readable content --- */
-    function renderRawFallback(text) {
+    function renderRawFallback(text, youtube_traction) {
       var html = '';
       // Extract key-value pairs using regex — works even on malformed JSON
       var fields = {
@@ -580,6 +580,17 @@
         html = '<div class="result-section"><div class="result-section-title">Evaluation</div><div class="result-text">' + readable.replace(/\n/g, '<br>') + '</div></div>';
       }
 
+      if (youtube_traction && youtube_traction.length > 0) {
+        html += '<div class="result-section" id="sec-traction"><div class="result-section-title">Real-world traction</div><div class="traction-grid">' + youtube_traction.map(function(v){
+          var publishedDate = v.published_at ? new Date(v.published_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '';
+          return '<a class="traction-card" href="'+escapeHtml(v.video_url)+'" target="_blank" rel="noopener">'+
+            '<div class="traction-title">'+escapeHtml(v.title)+'</div>'+
+            '<div class="traction-meta">'+escapeHtml(v.channel_name)+' &middot; '+publishedDate+'</div>'+
+            '<div class="traction-stats">'+Number(v.view_count||0).toLocaleString()+' views &middot; '+Number(v.comment_count||0).toLocaleString()+' comments</div>'+
+          '</a>';
+        }).join('') + '</div></div>';
+      }
+
       html += '<div class="results-actions"><button class="btn-new-eval" onclick="resetForm()">Evaluate another tool</button><button class="btn-pdf" onclick="downloadPDF()">&#128196; Download PDF</button></div>';
       document.getElementById('results').innerHTML = html;
       document.getElementById('results').classList.add('active');
@@ -600,21 +611,21 @@
             cleaned = cleaned.substring(fb, lb + 1);
             cleaned = cleaned.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
             var parsed = JSON.parse(cleaned);
-            data = {raw: false, evaluation: parsed, isCompare: data.isCompare};
+            data = {raw: false, evaluation: parsed, isCompare: data.isCompare, youtube_traction: data.youtube_traction};
             if(data.isCompare || (parsed.tools && parsed.tools.length)) { try { renderCompareResults(data); return; } catch(ce) {} }
           } else {
-            renderRawFallback(data.content || '');
+            renderRawFallback(data.content || '', data.youtube_traction);
             return;
           }
         } catch(e){
           // JSON parse failed — show readable extraction instead of error
-          renderRawFallback(data.content || '');
+          renderRawFallback(data.content || '', data.youtube_traction);
           return;
         }
       }
 
       if (!data.evaluation) {
-        renderRawFallback(data.content || JSON.stringify(data));
+        renderRawFallback(data.content || JSON.stringify(data), data.youtube_traction);
         return;
       }
 
