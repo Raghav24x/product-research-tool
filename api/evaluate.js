@@ -81,6 +81,12 @@ For each tool, evaluate the same 8 dimensions and produce scores. Then provide:
 2. Best for: which user profile each tool serves best.
 3. The verdict: given THIS user's context, which tool fits best and why.
 
+## CRITICAL — Every Tool Must Be Fully Evaluated, No Exceptions
+- The "tools" array in your output MUST contain one complete entry for EVERY tool name the user listed — same count, same order, no omissions.
+- This applies even if a tool is unfamiliar, unreleased, or you cannot verify it exists. Still produce a full scorecard (8 dimensions, each scored 1-5), strengths, limitations, one_line_verdict, and overall_score for it — score it low and say so plainly in the rationale (e.g. "Could not verify this tool exists; scored on available evidence only"), but never leave it out or skip its scorecard.
+- "head_to_head" and "best_for" must reference every tool by its exact name — never silently drop a tool from these sections because it was hard to research.
+- If a tool's name is ambiguous or unrecognized, do NOT abandon the comparison — evaluate the other tools normally and still include a scorecard entry for the unrecognized one with your best-effort assessment.
+
 ## Scoring Rules (CRITICAL — READ CAREFULLY)
 - Each dimension score must be between 1 and 5. NEVER score above 5. NEVER score below 1.
 - The overall_score for each tool = CALCULATE by adding all 8 dimension scores, then dividing by 8, then rounding to the nearest 0.5.
@@ -283,6 +289,8 @@ CRITICAL — READ CAREFULLY: Each tool name above is EXACT. Do NOT substitute, g
 - "Claude Code" = the CLI agentic coding tool, NOT Claude the chatbot
 - "Cursor" = the AI code editor, NOT any other product
 If a name refers to a specific feature, version, or tier of a broader product, you MUST evaluate ONLY that specific feature/version/tier. Your tool_name field in the output must match the exact name the user provided.
+
+MANDATORY: Your "tools" array must contain exactly ${allTools.length} entries — one full scorecard evaluation (all 8 dimensions, strengths, limitations, overall_score) per tool listed above, in the same order. If you cannot verify one of the tools exists, still include it with a low-confidence scorecard and say so in the rationale — do not drop it, and do not let one unclear tool stop you from fully evaluating the others. "head_to_head" and "best_for" must mention all ${allTools.length} tools by name.
 
 User context for calibration:
 - Role: ${role || "Not specified"}
