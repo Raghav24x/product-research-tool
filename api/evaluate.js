@@ -65,7 +65,12 @@ Tier 1 (for scores/facts): Official sites, documentation, pricing pages, reputab
 Tier 2 (community_opinions only): Reddit, HN, Twitter, blogs. NEVER use for scores. Summarize insights in your own words — NEVER include direct quotes, even partial ones. Describe what the person experienced. Only include opinions with a SPECIFIC experience or edge case. Prefix each with source type.
 
 ## Bottom Line (MOST IMPORTANT FIELD)
-2-3 sentences. Does this tool fit THIS SPECIFIC USER's requirements? Reference their role, budget, stated purpose, and current stack directly. Must read like advice from a colleague who knows the user's situation — not a product review.`;
+2-3 sentences. Does this tool fit THIS SPECIFIC USER's requirements? Reference their role, budget, stated purpose, and current stack directly. Must read like advice from a colleague who knows the user's situation — not a product review.
+
+## CRITICAL — The Scorecard Is Never Optional
+- You MUST output a complete "scorecard" object with all 8 dimensions, each with a numeric score 1-5 and a rationale, no matter what. This is the core deliverable of this tool — never skip it, never leave it empty, never omit the field.
+- This applies even if you cannot find the tool, the name is unfamiliar, or you believe it does not exist. In that case, score every dimension low (1-2) and write rationales that say plainly what's missing — e.g. "Could not verify a public product under this name; scored on absence of documented capability." Still fill in strengths, limitations, and every other field with your best-effort honest assessment instead of leaving them empty or generic.
+- Never substitute a short "this tool doesn't exist" message for the structured output. The structured evaluation (scorecard, strengths, limitations, overall_score) must always be present, even when the verdict is that the tool is unverifiable.`;
 
 const COMPARE_FRAMEWORK = `You are an expert AI tool evaluator. The user wants to compare 2-3 tools side by side. Produce a structured comparison calibrated to their specific context.
 
@@ -80,6 +85,12 @@ For each tool, evaluate the same 8 dimensions and produce scores. Then provide:
 1. Head-to-head summary: which tool wins on which dimension, with one-line reason.
 2. Best for: which user profile each tool serves best.
 3. The verdict: given THIS user's context, which tool fits best and why.
+
+## CRITICAL — Every Tool Must Be Fully Evaluated, No Exceptions
+- The "tools" array in your output MUST contain one complete entry for EVERY tool name the user listed — same count, same order, no omissions.
+- This applies even if a tool is unfamiliar, unreleased, or you cannot verify it exists. Still produce a full scorecard (8 dimensions, each scored 1-5), strengths, limitations, one_line_verdict, and overall_score for it — score it low and say so plainly in the rationale (e.g. "Could not verify this tool exists; scored on available evidence only"), but never leave it out or skip its scorecard.
+- "head_to_head" and "best_for" must reference every tool by its exact name — never silently drop a tool from these sections because it was hard to research.
+- If a tool's name is ambiguous or unrecognized, do NOT abandon the comparison — evaluate the other tools normally and still include a scorecard entry for the unrecognized one with your best-effort assessment.
 
 ## Scoring Rules (CRITICAL — READ CAREFULLY)
 - Each dimension score must be between 1 and 5. NEVER score above 5. NEVER score below 1.
@@ -162,7 +173,7 @@ Return ONLY valid JSON. No markdown fences, no preamble, no text outside JSON.
 }`;
 
 // --- YouTube traction helper ---
-export async function fetchYouTubeTraction(toolName) {
+export async function fetchYouTubeTraction(toolName, searchQuery) {
   const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
   if (!YOUTUBE_API_KEY) {
     console.warn("YOUTUBE_API_KEY not configured, skipping traction lookup.");
@@ -174,7 +185,7 @@ export async function fetchYouTubeTraction(toolName) {
 
   const searchParams = new URLSearchParams({
     part: "snippet",
-    q: `${toolName} software review`,
+    q: searchQuery || `${toolName} software review`,
     type: "video",
     order: "relevance",
     maxResults: "10",
@@ -262,6 +273,7 @@ export default async function handler(req, res) {
 
   // Determine if compare mode
   const isCompare = mode === "compare" && compareTools && compareTools.length > 0;
+  const allTools = isCompare ? [toolName, ...compareTools].slice(0, 3) : [toolName];
 
   // Build the system prompt
   const framework = isCompare
@@ -272,7 +284,6 @@ export default async function handler(req, res) {
   let userMessage;
 
   if (isCompare) {
-    const allTools = [toolName, ...compareTools].slice(0, 3);
     const toolList = allTools.map(function(t, i) { return (i + 1) + '. "' + t + '" — evaluate this EXACT name, not the parent product or a similar-sounding tool'; }).join('\n');
     userMessage = `Compare these AI tools side by side:
 ${toolList}
@@ -283,6 +294,8 @@ CRITICAL — READ CAREFULLY: Each tool name above is EXACT. Do NOT substitute, g
 - "Claude Code" = the CLI agentic coding tool, NOT Claude the chatbot
 - "Cursor" = the AI code editor, NOT any other product
 If a name refers to a specific feature, version, or tier of a broader product, you MUST evaluate ONLY that specific feature/version/tier. Your tool_name field in the output must match the exact name the user provided.
+
+MANDATORY: Your "tools" array must contain exactly ${allTools.length} entries — one full scorecard evaluation (all 8 dimensions, strengths, limitations, overall_score) per tool listed above, in the same order. If you cannot verify one of the tools exists, still include it with a low-confidence scorecard and say so in the rationale — do not drop it, and do not let one unclear tool stop you from fully evaluating the others. "head_to_head" and "best_for" must mention all ${allTools.length} tools by name.
 
 User context for calibration:
 - Role: ${role || "Not specified"}
@@ -298,6 +311,8 @@ Your verdict must recommend the best fit for THIS specific user's context.${addi
     userMessage = `Evaluate the AI tool: ${toolName}${toolUrl ? ` (${toolUrl})` : ""}
 
 CRITICAL: Evaluate the EXACT tool or feature named above. The name is precise and intentional. "Perplexity Computer" means the Computer feature specifically — NOT Perplexity AI in general. "Claude Code" means the CLI tool — NOT Claude the chatbot. If the name refers to a specific feature, product tier, or version of a broader product, evaluate THAT specific thing, not the parent product.
+
+MANDATORY: You must return a complete scorecard with all 8 dimensions scored, plus strengths, limitations, and overall_score — even if you cannot verify this tool exists or find a public product under this exact name. If that's the case, score every dimension low and say so in each rationale, but never omit the scorecard or substitute a short non-evaluation message in its place.
 
 User context for calibration:
 - Role: ${role || "Not specified"}
@@ -339,7 +354,10 @@ Calibrate your entire evaluation to this user's context.${additionalContext ? " 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody)
       }),
-      fetchYouTubeTraction(toolName)
+      fetchYouTubeTraction(
+        toolName,
+        isCompare ? `${allTools.join(" vs ")} comparison` : undefined
+      )
     ]);
 
     let youtube_traction = null;

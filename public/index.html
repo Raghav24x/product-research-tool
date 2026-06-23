@@ -509,6 +509,16 @@
         html += '</div>';
       }
       if (e.verdict) { html += '<div class="result-section"><div class="result-section-title">The verdict — for your context</div><div class="compare-verdict">'+e.verdict+'</div></div>'; }
+      if (data.youtube_traction && data.youtube_traction.length > 0) {
+        html += '<div class="result-section" id="sec-traction"><div class="result-section-title">Real-world traction</div><div class="traction-grid">' + data.youtube_traction.map(function(v){
+          var publishedDate = v.published_at ? new Date(v.published_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '';
+          return '<a class="traction-card" href="'+escapeHtml(v.video_url)+'" target="_blank" rel="noopener">'+
+            '<div class="traction-title">'+escapeHtml(v.title)+'</div>'+
+            '<div class="traction-meta">'+escapeHtml(v.channel_name)+' &middot; '+publishedDate+'</div>'+
+            '<div class="traction-stats">'+Number(v.view_count||0).toLocaleString()+' views &middot; '+Number(v.comment_count||0).toLocaleString()+' comments</div>'+
+          '</a>';
+        }).join('') + '</div></div>';
+      }
       e.tools.forEach(function(t) {
         var sc = '';
         if (t.scorecard) { for (var k in t.scorecard) { var v = t.scorecard[k], pct = (v.score/5)*100, cls = getScoreClass(v.score); sc += '<div class="scorecard-row '+cls+'" onclick="this.classList.toggle(\'expanded\')"><div class="scorecard-label">'+formatLabel(k)+'</div><div class="scorecard-bar-bg"><div class="scorecard-bar-fill" style="width:'+pct+'%"></div></div><div class="scorecard-value">'+v.score+'</div></div><div class="scorecard-rationale">'+v.rationale+'</div>'; } }
@@ -597,6 +607,81 @@
       document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
     }
 
+    /* --- Scan raw text for every balanced {...} block, used to recover individual tool objects --- */
+    function extractBalancedObjects(text) {
+      var results = [];
+      var i = 0;
+      while (i < text.length) {
+        if (text[i] === '{') {
+          var depth = 0, inStr = false, esc = false, j = i;
+          for (; j < text.length; j++) {
+            var ch = text[j];
+            if (inStr) {
+              if (esc) { esc = false; }
+              else if (ch === '\\') { esc = true; }
+              else if (ch === '"') { inStr = false; }
+            } else {
+              if (ch === '"') inStr = true;
+              else if (ch === '{') depth++;
+              else if (ch === '}') { depth--; if (depth === 0) { j++; break; } }
+            }
+          }
+          if (depth === 0 && j > i) { results.push(text.substring(i, j)); i = j; continue; }
+        }
+        i++;
+      }
+      return results;
+    }
+    function tryParseClean(str) {
+      try { return JSON.parse(str.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']')); }
+      catch (e) { return null; }
+    }
+
+    /* --- Fallback renderer for unparseable compare-mode JSON — recovers each tool individually --- */
+    function renderCompareRawFallback(text, youtube_traction) {
+      var candidates = extractBalancedObjects(text || '');
+      var toolObjs = [], seen = {};
+      candidates.forEach(function(c) {
+        var o = tryParseClean(c);
+        if (o && o.tool_name && o.scorecard && !seen[o.tool_name]) { seen[o.tool_name] = true; toolObjs.push(o); }
+      });
+
+      if (!toolObjs.length) { renderRawFallback(text, youtube_traction); return; }
+
+      toolObjs.forEach(cleanEval);
+
+      var verdictMatch = (text || '').match(/"verdict"\s*:\s*"([^"]*(?:\\"[^"]*)*)"/);
+      var verdict = verdictMatch ? stripMd(verdictMatch[1].replace(/\\"/g, '"').replace(/\\n/g, ' ')) : '';
+
+      var html = '';
+      toolObjs.forEach(function(t) {
+        var nameHtml = t.tool_url ? '<a href="'+t.tool_url+'" target="_blank" style="color:var(--result-header-text);border-bottom:1px solid rgba(255,255,255,0.3);text-decoration:none;">'+t.tool_name+' &#8599;</a>' : t.tool_name;
+        html += '<div class="result-header-card" style="margin-bottom:8px;"><div class="result-header"><div class="result-tool-name">'+nameHtml+'</div><div class="result-overall-score">'+(t.overall_score||'--')+'<span>/ 5</span></div></div>'+(t.one_line_verdict?'<div class="result-verdict">"'+t.one_line_verdict+'"</div>':'')+'</div>';
+      });
+      if (verdict) { html += '<div class="result-section"><div class="result-section-title">The verdict — for your context</div><div class="compare-verdict">'+verdict+'</div></div>'; }
+      if (youtube_traction && youtube_traction.length > 0) {
+        html += '<div class="result-section" id="sec-traction"><div class="result-section-title">Real-world traction</div><div class="traction-grid">' + youtube_traction.map(function(v){
+          var publishedDate = v.published_at ? new Date(v.published_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '';
+          return '<a class="traction-card" href="'+escapeHtml(v.video_url)+'" target="_blank" rel="noopener">'+
+            '<div class="traction-title">'+escapeHtml(v.title)+'</div>'+
+            '<div class="traction-meta">'+escapeHtml(v.channel_name)+' &middot; '+publishedDate+'</div>'+
+            '<div class="traction-stats">'+Number(v.view_count||0).toLocaleString()+' views &middot; '+Number(v.comment_count||0).toLocaleString()+' comments</div>'+
+          '</a>';
+        }).join('') + '</div></div>';
+      }
+      toolObjs.forEach(function(t) {
+        var sc = '';
+        if (t.scorecard) { for (var k in t.scorecard) { var v = t.scorecard[k], pct = (v.score/5)*100, cls = getScoreClass(v.score); sc += '<div class="scorecard-row '+cls+'" onclick="this.classList.toggle(\'expanded\')"><div class="scorecard-label">'+formatLabel(k)+'</div><div class="scorecard-bar-bg"><div class="scorecard-bar-fill" style="width:'+pct+'%"></div></div><div class="scorecard-value">'+v.score+'</div></div><div class="scorecard-rationale">'+v.rationale+'</div>'; } }
+        html += '<div class="result-section"><div class="result-section-title">'+t.tool_name+' — Scorecard</div>'+sc+'</div>';
+        if (t.strengths) { html += '<div class="result-section"><div class="result-section-title">'+t.tool_name+' — Strengths</div><ul class="result-list strengths">'+t.strengths.map(function(s){return'<li>'+s+'</li>';}).join('')+'</ul></div>'; }
+        if (t.limitations) { html += '<div class="result-section"><div class="result-section-title">'+t.tool_name+' — Limitations</div><ul class="result-list limitations">'+t.limitations.map(function(l){return'<li>'+l+'</li>';}).join('')+'</ul></div>'; }
+      });
+      html += '<div class="results-actions"><button class="btn-new-eval" onclick="resetForm()">New evaluation</button><button class="btn-pdf" onclick="downloadPDF()">&#128196; Download PDF</button></div>';
+      document.getElementById('results').innerHTML = html;
+      document.getElementById('results').classList.add('active');
+      document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+    }
+
     function renderResults(data){
       hideLoading();
       if(data.isCompare && !data.raw) { try { renderCompareResults(data); return; } catch(ce) { console.error('Compare render error:', ce); } }
@@ -613,18 +698,23 @@
             var parsed = JSON.parse(cleaned);
             data = {raw: false, evaluation: parsed, isCompare: data.isCompare, youtube_traction: data.youtube_traction};
             if(data.isCompare || (parsed.tools && parsed.tools.length)) { try { renderCompareResults(data); return; } catch(ce) {} }
+          } else if (data.isCompare) {
+            renderCompareRawFallback(data.content || '', data.youtube_traction);
+            return;
           } else {
             renderRawFallback(data.content || '', data.youtube_traction);
             return;
           }
         } catch(e){
           // JSON parse failed — show readable extraction instead of error
+          if (data.isCompare) { renderCompareRawFallback(data.content || '', data.youtube_traction); return; }
           renderRawFallback(data.content || '', data.youtube_traction);
           return;
         }
       }
 
       if (!data.evaluation) {
+        if (data.isCompare) { renderCompareRawFallback(data.content || JSON.stringify(data), data.youtube_traction); return; }
         renderRawFallback(data.content || JSON.stringify(data), data.youtube_traction);
         return;
       }
